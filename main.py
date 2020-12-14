@@ -5,7 +5,7 @@
 # https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_run.py and
 # https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_functions.py
 # also released under the GNU General Public License v3.
-# Latest update 6 December 2020
+# Latest update 14 December 2020
 
 import re
 import time
