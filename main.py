@@ -33,7 +33,7 @@ sole_infobox = True  # Skip pages that have more than one infobox (applies only 
 
 # Define test criteria. Pages that fail any of these will be recorded
 required_words = ['moth']
-excluded_words = ['blah ']
+excluded_words = [' blah ']
 test_regex_tf = True
 test_regex = re.compile(r'', re.IGNORECASE)
 title_regex_tf = True
