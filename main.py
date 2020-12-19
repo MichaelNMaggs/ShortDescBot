@@ -1,11 +1,10 @@
 # Code for ShortDescBot, task 1 - moths
 #
-# Michael Maggs, released under the GNU General Public License v3
-# Incorporates code by Mike Peel as at 28 November 2020:
+# Michael Maggs, released under GPL v3
+# Incorporates code by Mike Peel, GPL v3, 28 November 2020:
 # https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_run.py and
 # https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_functions.py
-# also released under the GNU General Public License v3.
-# Latest update 14 December 2020
+# Latest update 19 December 2020
 
 import re
 import time
@@ -13,11 +12,16 @@ import time
 import pywikibot
 from pywikibot import pagegenerators
 from pywikibot.data import api
+import mwparserfromhell
 
 # Mode of operation:
 # 'stage': write to staging file and/or examples to userspace
 # 'edit':  read from staging file and write live edits to namespace
 mode_flag = 'edit'
+
+# Set to 'True' to run live editing in assisted mode (step though and confirm every amendment in advance)
+# Run from normal account, not bot account, if before BAG approval
+debug = False
 
 # Category to work on
 targetcat = 'Category:Moths of China'
@@ -35,23 +39,19 @@ test_regex = re.compile(r'', re.IGNORECASE)
 title_regex_tf = True
 title_regex = re.compile(r'^((?!list).)*$', re.IGNORECASE)  # Fail any article that's entitled 'List ...'
 
-#  *** For each task the code in shortdesc_generator also needs to be hand-crafted ***
+#  **** For each task the code in shortdesc_generator also needs to be hand-crafted ****
 
 # Maximum number of articles to look through
-max_arts = 10000
+max_arts = 100
 
-# Set to 'True' to run live editing in assisted mode (step though and confirm every amendment in advance)
-# Run from normal account, not bot account, if before bot approval
-debug = True
-
-# Set partial=True to enable processing between startpoint and endpoint. Set as False and '' to process all pages
-partial = False
-startpoint = 'Hyperoptica ptilocentra'
-endpoint = 'Hyposidra aquilaria'
+# Set partial=True to enable processing between startpoint and endpoint. Set as False and '' to do all pages
+partial = True
+startpoint = 'Hydrelia sublatsaria'
+endpoint = 'Pachyodes amplificata'
 
 # Stage to file?
-stage_to_file = False
-max_stage = 10000
+stage_to_file = True
+max_stage = 50
 success_file = 'Moths.txt'
 failure_file = 'Moths_failures.txt'
 
@@ -61,19 +61,18 @@ max_examples = 200
 success_examples_wp = 'User:MichaelMaggs/Moths'
 failure_examples_wp = 'User:MichaelMaggs/Moths_failures'
 
-# Set a minimum wait time between live wp edits. Time in seconds.
-# IS THIS NEEDED?
-wait_time = 1.0
+# Set a minimum wait time between live wp edits. Normally controlled by uer-config.py
+wait_time = 10
 
 # Initialise the site
 wikipedia = pywikibot.Site('en', 'wikipedia')
+username = pywikibot.config.usernames['wikipedia']['en']
 
 
 # FUNCTIONS
 
 # Check to see if page matches the criteria. Returns (True, '') or (False, reason)
-def check_criteria(page, lead_text, required_words, excluded_words, test_regex_tf, test_regex,
-                   title_regex_tf, title_regex):
+def check_criteria(page, lead_text):
     # We need to match on *everything* specified in the criteria -
     # Returns (True, '') or (False, reason)
     for required in required_words:
@@ -98,7 +97,7 @@ def check_criteria(page, lead_text, required_words, excluded_words, test_regex_t
 
 
 # Are we interested in this page at all?  Returns (True, '') or (False, reason)
-def check_page(page, lead_text, require_infobox, infobox_strings, sole_infobox):
+def check_page(page):
     has_infobox = False
     # Check for existing short description
     if shortdesc_exists(page):
@@ -120,21 +119,24 @@ def check_page(page, lead_text, require_infobox, infobox_strings, sole_infobox):
     return True, ''
 
 
-# Does a description already exist?
+# Does a description already exist? Check the page info rather just the lead in order to find cases where some
+# template auto-includes it without using the short description template
 def shortdesc_exists(page):
-    global wikipedia
-    sections = pywikibot.textlib.extract_sections(page.text, wikipedia)
-    text = sections[0]
-    if re.search('{{short description', text, re.IGNORECASE):
+    description = ''
+    test = get_pageinfo(wikipedia, page)
+    for item in test['query']['pages']:
+        try:
+            description = test['query']['pages'][item]['pageprops']['wikibase-shortdesc']
+        except:
+            pass
+    if len(description) > 0:
         return True
-    else:
-        return False
+    return False
 
 
 # Generate the draft sd. Called by shortdesc_stage. Returns (True, description) for good result, or (False, errortext)
 # *** For each task, the code here needs to be hand-crafted ***
-def shortdesc_generator(page, lead_text):
-    global wikipedia
+def shortdesc_generator(page):
     title = page.title()
     base_sd1 = 'Species of moth'
     base_sd2 = 'Genus of moths'
@@ -152,10 +154,7 @@ def shortdesc_generator(page, lead_text):
 
 # Main function for 'stage' mode
 # Calls check_page, check_criteria and shortdesc_generator
-def shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words, excluded_words,
-                    test_regex_tf, test_regex, title_regex_tf, title_regex, require_infobox, infobox_strings,
-                    sole_infobox, success_file, failure_file, partial, startpoint, endpoint):
-    global wikipedia
+def shortdesc_stage():
     count_arts = 0
     count_success = 0
     count_success_examples = 0
@@ -167,7 +166,7 @@ def shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words
     failure_examples_str = ''
     tripped = False
 
-    # Get pages in the enwp category
+    # Get pages in the category
     cat = pywikibot.Category(wikipedia, targetcat)
 
     # Loop over pages
@@ -180,14 +179,14 @@ def shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words
             if not at_startpoint:
                 continue
 
-        # Get info related to this page, on enwp and from Wikidata
+        # Get info related to this page, on enWP and from Wikidata
         lead_text = get_lead(page)
         wikidata_sd = get_wikidata_desc(page)
         print('\nPROCESSING NEW PAGE IN SHORTDESC_STAGE')
         print('lead_text: ', lead_text)
 
         # Do we want this page? Check against page definition
-        result_page = check_page(page, lead_text, require_infobox, infobox_strings, sole_infobox)
+        result_page = check_page(page)
 
         # Should we skip this page? (not recorded in the list of failures)
         if not result_page[0]:
@@ -196,11 +195,9 @@ def shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words
             continue
 
         # We have a page to work with. Check whether it matches or fails the criteria
-        result_criteria = check_criteria(page, lead_text, required_words, excluded_words, test_regex_tf, test_regex,
-                                         title_regex_tf, title_regex)
+        result_criteria = check_criteria(page, lead_text)
 
         # If the page fails the criteria, note as such and write a new line to failure_str, for staging later
-
         if not result_criteria[0]:
             errortext = result_criteria[1]
             print(page.title() + ' - FAILED: ' + errortext)
@@ -221,8 +218,8 @@ def shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words
 
             continue
 
-        # The page matches the criteria, and we now need to work out the new sd
-        result_gen = shortdesc_generator(page, lead_text)
+        # The page matches the criteria, and we now need to work out the new short description
+        result_gen = shortdesc_generator(page)
 
         #  Failed to create a usable short description. Treat as if it were a page failure and write to failure_str
         if not result_gen[0]:
@@ -262,7 +259,7 @@ def shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words
                                     + lead_text + '\n'
 
         count_arts += 1
-        if count_arts >= max_arts:
+        if count_arts >= max_arts or count_success >= max_stage:
             break
 
         # If partial is True, stop when we reach the endpoint
@@ -271,8 +268,7 @@ def shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words
             if at_endpoint:
                 break
 
-    # Finished creating the strings
-    # Now stage the successes to success_file
+    # Finished creating the strings. Now stage the successes to success_file
     with open(success_file, 'w') as f1:
         f1.write(success_str)
 
@@ -283,9 +279,6 @@ def shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words
                       "SD)\n!Opening words of the lead\n"
         page.text = 'The bot does not use Wikidata\'s short description in any way. It is listed here for reference ' \
                     'only\n{| class="wikitable"' + header_text + success_examples_str + "|}"
-
-        # page.text = '{| class="wikitable"' + success_str + "\n|}"  #MP
-
         page.save("Saving a sample of ShortDescBot draft short descriptions")
         print('Examples are at https://en.wikipedia.org/wiki/' + success_examples_wp.replace(' ', '_'))
 
@@ -297,7 +290,6 @@ def shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words
     if wp_examples:
         page = pywikibot.Page(wikipedia, failure_examples_wp)
         header_text = "\n|+\nShortDescBot failed pages\n!Article\n!Reason for failure\n!(Wikidata SD)\n!Opening words " \
-                      "" \
                       "of the lead\n"
         page.text = 'The bot does not use Wikidata\'s short description in any way. It is listed here for reference ' \
                     'only' \
@@ -307,15 +299,21 @@ def shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words
 
     print('\nThe draft short descriptions are staged in ' + success_file + ', with failures in ' + failure_file)
 
-    # All done!
     return
 
 
 # Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local success_file
-def shortdesc_add(debug, success_file, wait_time):
-    global wikipedia
-    count = 0
+def shortdesc_add():
+    # Check login and work out text for edit summaries
+    if username == 'MichaelMaggs':
+        edit_text = 'Adding short description'
+    elif username == 'ShortDescBot':
+        edit_text = '[[User:ShortDescBot|ShortDescBot]] adding short description'
+    else:
+        print('STOPPING - unexpected username: ', username)
+        return
 
+    count = 0
     # Get the list of articles and the draft short descriptions from local file
     with open(success_file) as f:
         data = f.read()
@@ -323,17 +321,21 @@ def shortdesc_add(debug, success_file, wait_time):
 
     # Work through them one by one
     for line in todo:
+        values = line.split('|')
+        page = pywikibot.Page(wikipedia, values[0].strip())
+        description = values[1].strip()
+        print('\n')
+
+        # Check for Bots template exclusion
+        if not allow_bots(page.text, username):
+            print(page.title() + ' - NO EDIT MADE: Bot is excluded via the Bots template')
+            continue
         # Only if we don't have a table header
         if '{|' not in line and '|}' not in line and line.strip() != '':
-            values = line.split('|')
-            page = pywikibot.Page(wikipedia, values[0].strip())
-            print('\n')
             # Check again that page still has no existing description
             if shortdesc_exists(page):
                 print(page.title() + ' - NO EDIT MADE: Page now has an existing description')
                 continue
-            print(values)
-            description = values[1].strip()
             test = 'y'
             if debug:
                 test = 'n'
@@ -342,8 +344,10 @@ def shortdesc_add(debug, success_file, wait_time):
                         ' ', '_') + "? (Type 'y' to apply)")
             if test == 'y':
                 count += 1
+                print(str(count + 1) + ': ' + page.title() + ' - WRITING NEW SD: ' + description)
                 page.text = '{{Short description|' + description + '}}\n' + page.text
-                page.save('Adding short description "' + description + '"', minor=False)
+                page.save(edit_text + ' "' + description + '"', minor=False)
+
 
             time.sleep(wait_time)
 
@@ -353,17 +357,13 @@ def shortdesc_add(debug, success_file, wait_time):
 
 # Get the description from Wikidata
 def get_wikidata_desc(page):
-    global wikipedia
     try:
         wd_item = pywikibot.ItemPage.fromPage(page, wikipedia)
         item_dict = wd_item.get()
         qid = wd_item.title()
     except:
-        print('Huh - no page found')
+        # print('No qid recovered from Wikidata')
         return ''
-
-    # Get the description from Wikidata to make sure it's empty   WHAT IS THIS ??
-    wikidata_description = ''
     try:
         return item_dict['descriptions']['en']
     except:
@@ -372,38 +372,24 @@ def get_wikidata_desc(page):
 
 # Get the first sentence or sentences (up to 120 chars) of the lead
 def get_lead(page):
-    global wikipedia
-    parse_debug = False
-
     sections = pywikibot.textlib.extract_sections(page.text, wikipedia)
     text = sections[0]
-    if parse_debug: print("1: ", text)
     text = re.sub(r"{{.*?}}", "", text)
-    if parse_debug: print("2: ", text)
     text = re.sub(r"\[\[([^\]\[|]*)\|", "[[", text, re.MULTILINE)
-    if parse_debug: print("3: ", text)
     if "}}" in text:
         text = text.split("}}")[-1]
-    if parse_debug: print("4: ", text)
     text = re.sub(r"<ref.*?</ref>", "", text, re.MULTILINE)
-    if parse_debug: print("5: ", text)
     text = re.sub(r"&nbsp;", " ", text, re.MULTILINE)
-    if parse_debug: print("6: ", text)
     text = re.sub(r"[\[\]]+", "", text, re.MULTILINE)
-    if parse_debug: print("7: ", text)
     text = re.sub(r"[^A-Za-z0-9,\.;:\- ]+", "", text, re.MULTILINE)
-    if parse_debug: print("8: ", text)
     text = text[0:120].strip()
-    if parse_debug: print("9: ", text)
     if '.' in text:
         text = text.rpartition('.')[0] + '.'  # Chop out everything after the last full stop, if there is one
-        if parse_debug: print("10: ", text)
     return text
 
 
 # Count the number of infoboxes
 def count_infoboxes(page):
-    global wikipedia
     count = 0
     templates = pywikibot.textlib.extract_templates_and_params(page.text)
     for template in templates:
@@ -422,14 +408,40 @@ def get_pageinfo(site, itemtitle):
     return request.submit()
 
 
+# Bots template exclusion compliance. Code from https://en.wikipedia.org/wiki/Template:Bots#Python
+def allow_bots(text, user):
+
+    user = user.lower().strip()
+    text = mwparserfromhell.parse(text)
+    for tl in text.filter_templates():
+        if tl.name.matches(['bots', 'nobots']):
+            break
+    else:
+        return True
+    for param in tl.params:
+        bots = [x.lower().strip() for x in param.value.split(",")]
+        if param.name == 'allow':
+            if ''.join(bots) == 'none': return False
+            for bot in bots:
+                if bot in (user, 'all'):
+                    return True
+        elif param.name == 'deny':
+            if ''.join(bots) == 'none': return True
+            for bot in bots:
+                if bot in (user, 'all'):
+                    return False
+    if tl.name.matches('nobots') and len(tl.params) == 0:
+        return False
+    return True
+
+
 # MAIN CODE
 
 # Run staging code
 if mode_flag == 'stage':
-    # input('***** Ready to stage. Press return to continue')
-    shortdesc_stage(targetcat, max_arts, max_stage, max_examples, required_words, excluded_words,
-                    test_regex_tf, test_regex, title_regex_tf, title_regex, require_infobox, infobox_strings,
-                    sole_infobox, success_file, failure_file, partial, startpoint, endpoint)
+    print('\nLogged in as ' + username)
+    input('***** Ready to stage. Press return to continue')
+    shortdesc_stage()
 
 # Run live editing code
 if mode_flag == 'edit':
@@ -437,5 +449,6 @@ if mode_flag == 'edit':
         run_type = 'assisted'
     else:
         run_type = 'automatic'
+    print('\nLogged in as ' + username)
     input('***** READY TO WRITE LIVE EDITS in ' + run_type + ' mode. Press return to continue')
-    shortdesc_add(debug, success_file, wait_time)
+    shortdesc_add()
