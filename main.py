@@ -9,10 +9,10 @@
 import re
 import time
 
+import mwparserfromhell
 import pywikibot
 from pywikibot import pagegenerators
 from pywikibot.data import api
-import mwparserfromhell
 
 # Mode of operation:
 # 'stage': write to staging file and/or examples to userspace
@@ -37,21 +37,21 @@ excluded_words = [' blah ']
 test_regex_tf = True
 test_regex = re.compile(r'', re.IGNORECASE)
 title_regex_tf = True
-title_regex = re.compile(r'^((?!list).)*$', re.IGNORECASE)  # Fail any article that's entitled 'List ...'
+title_regex = re.compile(r'^((?!list).)*$', re.IGNORECASE)  # Fail any article entitled 'List ...'
 
 #  **** For each task the code in shortdesc_generator also needs to be hand-crafted ****
 
 # Maximum number of articles to look through
-max_arts = 100
+max_arts = 100000
 
 # Set partial=True to enable processing between startpoint and endpoint. Set as False and '' to do all pages
-partial = True
+partial = False
 startpoint = 'Hydrelia sublatsaria'
 endpoint = 'Pachyodes amplificata'
 
 # Stage to file?
 stage_to_file = True
-max_stage = 50
+max_stage = 100000
 success_file = 'Moths.txt'
 failure_file = 'Moths_failures.txt'
 
@@ -61,8 +61,8 @@ max_examples = 200
 success_examples_wp = 'User:MichaelMaggs/Moths'
 failure_examples_wp = 'User:MichaelMaggs/Moths_failures'
 
-# Set a minimum wait time between live wp edits. Normally controlled by uer-config.py
-wait_time = 10
+# Set a longer than usual wait time between live wp edits. Normally controlled by put_throttle in user-config.py
+wait_time = 0
 
 # Initialise the site
 wikipedia = pywikibot.Site('en', 'wikipedia')
@@ -170,7 +170,7 @@ def shortdesc_stage():
     cat = pywikibot.Category(wikipedia, targetcat)
 
     # Loop over pages
-    for page in pagegenerators.CategorizedPageGenerator(cat, recurse=False):
+    for page in pagegenerators.CategorizedPageGenerator(cat, recurse=True):
 
         # If partial is True, skip over initial pages until we reach the startpoint
         if partial and not tripped:
@@ -290,6 +290,7 @@ def shortdesc_stage():
     if wp_examples:
         page = pywikibot.Page(wikipedia, failure_examples_wp)
         header_text = "\n|+\nShortDescBot failed pages\n!Article\n!Reason for failure\n!(Wikidata SD)\n!Opening words " \
+                      "" \
                       "of the lead\n"
         page.text = 'The bot does not use Wikidata\'s short description in any way. It is listed here for reference ' \
                     'only' \
@@ -324,7 +325,6 @@ def shortdesc_add():
         values = line.split('|')
         page = pywikibot.Page(wikipedia, values[0].strip())
         description = values[1].strip()
-        print('\n')
 
         # Check for Bots template exclusion
         if not allow_bots(page.text, username):
@@ -347,7 +347,6 @@ def shortdesc_add():
                 print(str(count + 1) + ': ' + page.title() + ' - WRITING NEW SD: ' + description)
                 page.text = '{{Short description|' + description + '}}\n' + page.text
                 page.save(edit_text + ' "' + description + '"', minor=False)
-
 
             time.sleep(wait_time)
 
@@ -410,7 +409,6 @@ def get_pageinfo(site, itemtitle):
 
 # Bots template exclusion compliance. Code from https://en.wikipedia.org/wiki/Template:Bots#Python
 def allow_bots(text, user):
-
     user = user.lower().strip()
     text = mwparserfromhell.parse(text)
     for tl in text.filter_templates():
