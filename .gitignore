@@ -2,3 +2,9 @@
 throttle.ctrl
 pywikibot.lwp
 *apicache*
+scratch.py
+scratch2.py
+*.txt
+*.csv
+*.tsv
+*.numbers
