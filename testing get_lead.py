@@ -1,3 +1,5 @@
+# Test the get_lead function
+#
 import re
 
 import pywikibot
