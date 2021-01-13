@@ -59,7 +59,7 @@ failure_examples_wp = 'User:MichaelMaggs/Moths_failures'
 #  **** For each task the code in shortdesc_generator also needs to be hand-crafted ****
 
 #  EDIT CONFIGURATION
-# Debug. Set to 'True' to run live editing in assisted mode (step though and confirm every amendment in advance)
+# Debug: set to 'True' to run live editing in assisted mode (step though and confirm every amendment in advance)
 # Run from normal account, not bot account, if before BAG approval
 debug = False
 # Set a longer than usual wait time between live wp edits. Normally controlled by put_throttle in user-config.py
