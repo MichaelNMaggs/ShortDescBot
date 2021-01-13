@@ -4,69 +4,16 @@
 # Incorporates code by Mike Peel, GPL v3, 28 November 2020:
 # https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_run.py and
 # https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_functions.py
-# Latest update 19 December 2020
+# Latest update 13 January 2021
 
-import re
+
 import time
 
 import mwparserfromhell
-import pywikibot
 from pywikibot import pagegenerators
 from pywikibot.data import api
 
-# Mode of operation:
-# 'stage': write to staging file and/or examples to userspace
-# 'edit':  read from staging file and write live edits to namespace
-mode_flag = 'edit'
-
-# Set to 'True' to run live editing in assisted mode (step though and confirm every amendment in advance)
-# Run from normal account, not bot account, if before BAG approval
-debug = False
-
-# Category to work on
-targetcat = 'Category:Moths of China'
-
-# Define the pages that that we are interested in. Others will be skipped without comment
-require_infobox = False
-infobox_strings = ['infobox']  # Add additional elements for various infobox types
-sole_infobox = True  # Skip pages that have more than one infobox (applies only if require_infobox = True)
-
-# Define test criteria. Pages that fail any of these will be recorded
-required_words = ['moth']
-excluded_words = [' blah ']
-test_regex_tf = True
-test_regex = re.compile(r'', re.IGNORECASE)
-title_regex_tf = True
-title_regex = re.compile(r'^((?!list).)*$', re.IGNORECASE)  # Fail any article entitled 'List ...'
-
-#  **** For each task the code in shortdesc_generator also needs to be hand-crafted ****
-
-# Maximum number of articles to look through
-max_arts = 100000
-
-# Set partial=True to enable processing between startpoint and endpoint. Set as False and '' to do all pages
-partial = False
-startpoint = 'Hydrelia sublatsaria'
-endpoint = 'Pachyodes amplificata'
-
-# Stage to file?
-stage_to_file = True
-max_stage = 100000
-success_file = 'Moths.txt'
-failure_file = 'Moths_failures.txt'
-
-# Write examples to my wp userspace?
-wp_examples = False
-max_examples = 200
-success_examples_wp = 'User:MichaelMaggs/Moths'
-failure_examples_wp = 'User:MichaelMaggs/Moths_failures'
-
-# Set a longer than usual wait time between live wp edits. Normally controlled by put_throttle in user-config.py
-wait_time = 0
-
-# Initialise the site
-wikipedia = pywikibot.Site('en', 'wikipedia')
-username = pywikibot.config.usernames['wikipedia']['en']
+from sd_config import *
 
 
 # FUNCTIONS
@@ -77,11 +24,9 @@ def check_criteria(page, lead_text):
     # Returns (True, '') or (False, reason)
     for required in required_words:
         if required not in lead_text:
-            # print(page.title() + ' Does not mention ' + required)
             return False, 'Required word missing - ' + required
     for excluded in excluded_words:
         if excluded in lead_text:
-            # print(page.title() + ' - mentions ' + excluded)
             return False, 'Excluded word present - ' + excluded
 
     if test_regex_tf:
@@ -166,11 +111,27 @@ def shortdesc_stage():
     failure_examples_str = ''
     tripped = False
 
-    # Get pages in the category
-    cat = pywikibot.Category(wikipedia, targetcat)
+    # Set up pages as iterable, from cat or from Petscan filer. Each item in pages must be created as a Pywikibot object
+    if petscan_tf:  # Import a file of Petscan results
+        pages = []
+        with open(petscan_file) as f:
+            data = f.read()
+            todo = data.splitlines()
+        for line in todo:
+            values = line.split('\t')
+            if values[0] == 'number':  # Ignore any header line
+                continue
+            title = values[1]
+            page = pywikibot.Page(wikipedia, title)
+            pages.append(page)
 
-    # Loop over pages
-    for page in pagegenerators.CategorizedPageGenerator(cat, recurse=True):
+    else:  # Use articles in the Wikipedia category
+        cat = pywikibot.Category(wikipedia, targetcat)
+        pages = pagegenerators.CategorizedPageGenerator(cat, recurse=False, namespaces=[0])
+
+    # Main loop
+    for page in pages:
+        print(page)
 
         # If partial is True, skip over initial pages until we reach the startpoint
         if partial and not tripped:
@@ -182,8 +143,9 @@ def shortdesc_stage():
         # Get info related to this page, on enWP and from Wikidata
         lead_text = get_lead(page)
         wikidata_sd = get_wikidata_desc(page)
-        print('\nPROCESSING NEW PAGE IN SHORTDESC_STAGE')
-        print('lead_text: ', lead_text)
+        if verbose_stage:
+            print('\nPROCESSING NEW PAGE IN SHORTDESC_STAGE')
+            print('lead_text: ', lead_text)
 
         # Do we want this page? Check against page definition
         result_page = check_page(page)
@@ -201,19 +163,19 @@ def shortdesc_stage():
         if not result_criteria[0]:
             errortext = result_criteria[1]
             print(page.title() + ' - FAILED: ' + errortext)
-            if count_failure <= max_stage:
+            if not stop_now(max_stage, count_failure):
                 count_failure += 1
                 failure_str += page.title() + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + lead_text + '\n'
 
             # If needed, also build up failure_examples_str ready to write to userspace
-            if wp_examples and (count_failure_examples <= max_examples):
+            if wp_examples and count_failure_examples <= max_examples:
                 count_failure_examples += 1
                 failure_examples_str += '|-\n'
                 failure_examples_str += '| [[' + page.title() + ']] || ' + errortext + ' || ' + wikidata_sd + ' || ' \
                                         + lead_text + '\n'
 
             count_arts += 1
-            if count_arts >= max_arts:
+            if stop_now(max_arts, count_arts):
                 break
 
             continue
@@ -224,8 +186,9 @@ def shortdesc_stage():
         #  Failed to create a usable short description. Treat as if it were a page failure and write to failure_str
         if not result_gen[0]:
             errortext2 = result_gen[1]
-            print(page.title() + errortext2)
-            if count_failure <= max_stage:
+            print(page.title() + ' - FAILED: ' + errortext2)
+
+            if not stop_now(max_stage, count_failure):
                 count_failure += 1
                 failure_str += page.title() + ' | ' + errortext2 + ' | ' + wikidata_sd + ' | ' + lead_text + '\n'
 
@@ -237,7 +200,7 @@ def shortdesc_stage():
                                         + lead_text + '\n'
 
             count_arts += 1
-            if count_arts >= max_arts:
+            if stop_now(max_arts, count_arts):
                 break
 
             continue
@@ -247,19 +210,21 @@ def shortdesc_stage():
         print(str(count_arts + 1) + ': ' + page.title() + ' - STAGING NEW SD: ' + description)
 
         # Build up success_str string ready to save to local file
-        if count_success <= max_stage:
+        if not stop_now(max_stage, count_success):
             count_success += 1
             success_str += page.title() + ' | ' + description + ' | ' + wikidata_sd + ' | ' + lead_text + '\n'
 
         #  If needed, also build up success_examples_str string ready to write to userspace
-        if wp_examples and (count_success_examples <= max_examples):
+        if wp_examples and count_success_examples <= max_examples:
             count_success_examples += 1
             success_examples_str += '|-\n'
             success_examples_str += '| [[' + page.title() + ']] || ' + description + ' || ''' + wikidata_sd + ' || ' \
                                     + lead_text + '\n'
 
         count_arts += 1
-        if count_arts >= max_arts or count_success >= max_stage:
+        if stop_now(max_arts, count_arts):
+            break
+        if stop_now(max_stage, count_success):
             break
 
         # If partial is True, stop when we reach the endpoint
@@ -291,6 +256,12 @@ def shortdesc_stage():
         page = pywikibot.Page(wikipedia, failure_examples_wp)
         header_text = "\n|+\nShortDescBot failed pages\n!Article\n!Reason for failure\n!(Wikidata SD)\n!Opening words " \
                       "" \
+                      "" \
+                      "" \
+                      "" \
+                      "" \
+                      "" \
+                      "" \
                       "of the lead\n"
         page.text = 'The bot does not use Wikidata\'s short description in any way. It is listed here for reference ' \
                     'only' \
@@ -298,8 +269,14 @@ def shortdesc_stage():
         page.save("Save a sample of ShortDescBot failed pages")
         print('Failures are at https://en.wikipedia.org/wiki/' + failure_examples_wp.replace(' ', '_'))
 
-    print('\nThe draft short descriptions are staged in ' + success_file + ', with failures in ' + failure_file)
-
+    try:
+        targets = count_failure + count_success
+        succ_pc = round(100 * count_success / targets, 2)
+        fail_pc = round(100 * count_failure / targets, 2)
+        print(f'\nThe draft short descriptions are staged in {success_file}, with failures in {failure_file}')
+        print(f'\nTARGETS: {targets}  SUCCESS: {count_success} ({succ_pc}%)  FAILURE: {count_failure} ({fail_pc}%)')
+    except:
+        print('\nNo target articles found.')
     return
 
 
@@ -322,8 +299,11 @@ def shortdesc_add():
 
     # Work through them one by one
     for line in todo:
-        values = line.split('|')
+        values = line.split('\t')  # **** NOTE CHANGED ****
         page = pywikibot.Page(wikipedia, values[0].strip())
+        if not page.exists():
+            print(page.title() + ' -  PAGE DOES NOT EXIST')
+            return
         description = values[1].strip()
 
         # Check for Bots template exclusion
@@ -334,23 +314,31 @@ def shortdesc_add():
         if '{|' not in line and '|}' not in line and line.strip() != '':
             # Check again that page still has no existing description
             if shortdesc_exists(page):
-                print(page.title() + ' - NO EDIT MADE: Page now has an existing description')
+                print(page.title() + ' - NO EDIT MADE: Page now has a description')
                 continue
             test = 'y'
             if debug:
                 test = 'n'
                 test = input(
-                    'Add "' + description + '"" to https://en.wikipedia.org/wiki/' + values[0].strip().replace(
+                    'Add "' + description + '" to https://en.wikipedia.org/wiki/' + values[0].strip().replace(
                         ' ', '_') + "? (Type 'y' to apply)")
             if test == 'y':
                 count += 1
                 print(str(count + 1) + ': ' + page.title() + ' - WRITING NEW SD: ' + description)
                 page.text = '{{Short description|' + description + '}}\n' + page.text
-                page.save(edit_text + ' "' + description + '"', minor=False)
+                try:
+                    page.save(edit_text + ' "' + description + '"', minor=False)
+                except:
+                    print(f"UNABLE TO EDIT {page.title()}. Will retry in 1 minute")
+                    time.sleep(60)
+                    try:
+                        page.save(edit_text + ' "' + description + '"', minor=False)
+                    except:
+                        print(f"STILL UNABLE TO EDIT {page.title()}. Skipping this page")
 
             time.sleep(wait_time)
 
-    print("\nDONE! Added short descriptions to " + str(count) + " articles ")
+    print(f"\nDONE! Added short descriptions to {str(count)} articles ")
     return
 
 
@@ -361,7 +349,7 @@ def get_wikidata_desc(page):
         item_dict = wd_item.get()
         qid = wd_item.title()
     except:
-        # print('No qid recovered from Wikidata')
+        print('ERROR: No qid recovered from Wikidata')
         return ''
     try:
         return item_dict['descriptions']['en']
@@ -369,22 +357,92 @@ def get_wikidata_desc(page):
         return ''
 
 
+# Create dictionary of paired parenthetical characters
+# Based on code by Baltasarq CC BY-SA 3.0
+# https://stackoverflow.com/questions/29991917/indices-of-matching-parentheses-in-python
+def find_parens(s, op, cl):  # (Note: op and cl must be single characters)
+    toret = {}
+    pstack = []
+
+    for i, c in enumerate(s):
+        if c == op:
+            pstack.append(i)
+        elif c == cl:
+            if len(pstack) == 0:
+                raise IndexError("No matching closing parens at: " + str(i))
+            toret[pstack.pop()] = i
+
+    if len(pstack) > 0:
+        raise IndexError("No matching opening parens at: " + str(pstack.pop()))
+
+    return toret
+
+
+def clean_text(textstr):
+    # Remove and clean up unwanted characters in textstr (close_up works for both bold and italic wikicode)
+    close_up = ["`", "'''", "''", "[", "]", "{", "}", "__NOTOC__"]
+    convert_space = ["\t", "\n", "  ", "&nbsp;"]
+    for item in close_up:
+        textstr = textstr.replace(item, "")
+    for item in convert_space:
+        textstr = textstr.replace(item, " ")
+    textstr = textstr.replace("&ndash;", "–")
+    textstr = textstr.replace("&mdash;", "—")
+
+    return textstr
+
+
 # Get the first sentence or sentences (up to 120 chars) of the lead
 def get_lead(page):
     sections = pywikibot.textlib.extract_sections(page.text, wikipedia)
-    text = sections[0]
-    text = re.sub(r"{{.*?}}", "", text)
-    text = re.sub(r"\[\[([^\]\[|]*)\|", "[[", text, re.MULTILINE)
-    if "}}" in text:
-        text = text.split("}}")[-1]
-    text = re.sub(r"<ref.*?</ref>", "", text, re.MULTILINE)
-    text = re.sub(r"&nbsp;", " ", text, re.MULTILINE)
-    text = re.sub(r"[\[\]]+", "", text, re.MULTILINE)
-    text = re.sub(r"[^A-Za-z0-9,\.;:\- ]+", "", text, re.MULTILINE)
-    text = text[0:120].strip()
-    if '.' in text:
-        text = text.rpartition('.')[0] + '.'  # Chop out everything after the last full stop, if there is one
-    return text
+    lead = sections[0]
+
+    # Remove any templates: {{ ... }}
+    # First, replace template double braces with single so that we can use find_parens
+    lead = lead.replace("{{", "{")
+    lead = lead.replace("}}", "}")
+    try:
+        result = find_parens(lead, '{', '}')  # Get start and end indexes for all templates
+    except IndexError:
+        return
+    # Go through templates and replace with ` strings of same length, to avoid changing index positions
+    for key in result:
+        start = key
+        end = result[key]
+        length = end - start + 1
+        lead = lead.replace(lead[start:end + 1], "`" * length)
+
+    # Remove any images: [[File: ... ]] or [[Image: ... ]]
+    # Replace double square brackets with single so that we can use find_parens
+    lead = lead.replace("[[", "[")
+    lead = lead.replace("]]", "]")
+    try:
+        result = find_parens(lead, '[', ']')  # Get start and end indexes for all square brackets
+    except IndexError:
+        return
+    # Go through results and replace wikicode representing images with ` strings of same length
+    for key in result:
+        start = key
+        end = result[key]
+        strstart = lead[start + 1:start + 7]
+        if 'File:' in strstart or 'Image:' in strstart:
+            length = end - start + 1
+            lead = lead.replace(lead[start:end + 1], "`" * length)
+
+    # Deal with redirected wikilinks: replace [xxx|yyy] with [yyy]
+    lead = re.sub(r"\[([^\]\[|]*)\|", "[", lead, re.MULTILINE)
+
+    # Remove any references: <ref ... /ref> (can't deal with raw HTML such as <small> ... </small>)
+    lead = re.sub(r"<.*?>", "", lead, re.MULTILINE)
+
+    # Delete the temporary ` strings and clean up
+    lead = clean_text(lead)
+    # Reduce length to 150, and chop out everything after the last full stop, if there is one
+    lead = lead[:150].strip()
+    if '.' in lead:
+        lead = lead.rpartition('.')[0] + '.'
+
+    return lead
 
 
 # Count the number of infoboxes
@@ -408,6 +466,7 @@ def get_pageinfo(site, itemtitle):
 
 
 # Bots template exclusion compliance. Code from https://en.wikipedia.org/wiki/Template:Bots#Python
+# Released under CC BY-SA 3.0, page editors.
 def allow_bots(text, user):
     user = user.lower().strip()
     text = mwparserfromhell.parse(text)
@@ -433,20 +492,10 @@ def allow_bots(text, user):
     return True
 
 
-# MAIN CODE
-
-# Run staging code
-if mode_flag == 'stage':
-    print('\nLogged in as ' + username)
-    input('***** Ready to stage. Press return to continue')
-    shortdesc_stage()
-
-# Run live editing code
-if mode_flag == 'edit':
-    if debug:
-        run_type = 'assisted'
-    else:
-        run_type = 'automatic'
-    print('\nLogged in as ' + username)
-    input('***** READY TO WRITE LIVE EDITS in ' + run_type + ' mode. Press return to continue')
-    shortdesc_add()
+# Stop when c exceeds a non-zero value of max. If max = 0, don't stop at all
+def stop_now(max, c):
+    if not max:
+        return False
+    elif c < max:
+        return False
+    return True
