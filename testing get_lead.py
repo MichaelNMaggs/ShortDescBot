@@ -1,10 +1,10 @@
 # Test the get_lead function
-#
+
 import re
 
 import pywikibot
 
-article = 'Givira basiplagax'
+article = 'Actinote thalia'
 wikipedia = pywikibot.Site('en', 'wikipedia')
 page = pywikibot.Page(wikipedia, article)
 
@@ -59,7 +59,7 @@ def get_lead(page):
     try:
         result = find_parens(lead, '{', '}')  # Get start and end indexes for all templates
     except IndexError:
-        return
+        return None
     # Go through templates and replace with ` strings of same length, to avoid changing index positions
     for key in result:
         start = key
@@ -74,7 +74,7 @@ def get_lead(page):
     try:
         result = find_parens(lead, '[', ']')  # Get start and end indexes for all square brackets
     except IndexError:
-        return
+        return None
     # Go through results and replace wikicode representing images with ` strings of same length
     for key in result:
         start = key
@@ -92,7 +92,9 @@ def get_lead(page):
     lead = re.sub(r"<.*?>", "", lead, re.MULTILINE)
 
     # Delete the temporary ` strings and clean up
+    print("BEFORE CLEAN: ", lead)
     lead = clean_text(lead)
+    print("BEFORE CLEAN: ", lead)
     # Reduce length to 120, and chop out everything after the last full stop, if there is one
     lead = lead[:120].strip()
     if '.' in lead:

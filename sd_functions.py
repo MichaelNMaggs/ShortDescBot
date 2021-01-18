@@ -1,11 +1,4 @@
-# Code for ShortDescBot, task 1 - moths
-#
-# Michael Maggs, released under GPL v3
-# Incorporates code by Mike Peel, GPL v3, 28 November 2020:
-# https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_run.py and
-# https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_functions.py
-# Latest update 13 January 2021.
-
+# See sd_run.py for status and copyright release information
 
 import time
 
@@ -13,24 +6,32 @@ import mwparserfromhell
 from pywikibot import pagegenerators
 from pywikibot.data import api
 
-from sd_config import *
+from shortdesc_generator import *
 
 
 # FUNCTIONS
 
 # Check to see if page matches the criteria. Returns (True, '') or (False, reason)
 def check_criteria(page, lead_text):
-    # We need to match on *everything* specified in the criteria -
+    # We need to match on *everything* specified in the criteria
     # Returns (True, '') or (False, reason)
     for required in required_words:
         if required not in lead_text:
             return False, 'Required word missing - ' + required
-    for excluded in excluded_words:
-        if excluded in lead_text:
-            return False, 'Excluded word present - ' + excluded
+    if excluded_words != []:
+        for excluded in excluded_words:
+            if excluded in lead_text:
+                return False, 'Excluded word present - ' + excluded
+    none_found = True
+    for some_word in some_words:
+        if some_word in lead_text:
+            none_found = False
+            break
+    if none_found and some_words != []:  # Ignore this if no some_words have been defined at all
+        return False, 'None of the some_words are present'
 
-    if test_regex_tf:
-        result = test_regex.match(lead_text)  # Returns object if a match, or None
+    if text_regex_tf:
+        result = text_regex.match(lead_text)  # Returns object if a match, or None
         if result is None:
             return False, 'Lead does not match regex'
     if title_regex_tf:
@@ -44,16 +45,19 @@ def check_criteria(page, lead_text):
 # Are we interested in this page at all?  Returns (True, '') or (False, reason)
 def check_page(page):
     has_infobox = False
-    # Check for existing short description
-    if shortdesc_exists(page):
+    # Ignore articles entitled "List of ..."
+    if 'list of' in page.title().lower():
+        return False, 'Is a list article'
+        # Check for existing short description
+        # if shortdesc_exists(page):                            # TEMP EDIT  *********************************
         return False, 'Already has short description'
     # Ignore redirects
-    if 'REDIRECT' in page.text:
+    if '#REDIRECT' in page.text:
         return False, 'Is a redirect'
     # Check for required infobox, and no more than one if specified
     if require_infobox:
         for option in infobox_strings:  # Check through the various strings that identify an infobox
-            if option in page.text.lower():
+            if option.lower() in page.text.lower():
                 has_infobox = True
         if not has_infobox:
             return False, 'Does not have infobox'
@@ -79,24 +83,6 @@ def shortdesc_exists(page):
     return False
 
 
-# Generate the draft sd. Called by shortdesc_stage. Returns (True, description) for good result, or (False, errortext)
-# *** For each task, the code here needs to be hand-crafted ***
-def shortdesc_generator(page):
-    title = page.title()
-    base_sd1 = 'Species of moth'
-    base_sd2 = 'Genus of moths'
-
-    title_nobra = re.sub(r'\(.+?\)', '', title).strip()
-    title_nobra_len = len(title_nobra.split())
-
-    if title_nobra_len == 2:
-        return True, base_sd1
-    if title_nobra_len == 1:
-        return True, base_sd2
-
-    return False, "Can't create description"
-
-
 # Main function for 'stage' mode
 # Calls check_page, check_criteria and shortdesc_generator
 def shortdesc_stage():
@@ -104,11 +90,9 @@ def shortdesc_stage():
     count_success = 0
     count_success_examples = 0
     count_failure = 0
-    count_failure_examples = 0
     success_str = ''
     success_examples_str = ''
     failure_str = ''
-    failure_examples_str = ''
     tripped = False
 
     # Set up pages as iterable, from cat or from Petscan filer. Each item in pages must be created as a Pywikibot object
@@ -127,11 +111,11 @@ def shortdesc_stage():
 
     else:  # Use articles in the Wikipedia category
         cat = pywikibot.Category(wikipedia, targetcat)
-        pages = pagegenerators.CategorizedPageGenerator(cat, recurse=False, namespaces=[0])
+        pages = pagegenerators.CategorizedPageGenerator(cat, recurse=recurse_cats, namespaces=[0])
 
     # Main loop
     for page in pages:
-        print(page)
+        lead_text = get_lead(page)
 
         # If partial is True, skip over initial pages until we reach the startpoint
         if partial and not tripped:
@@ -141,10 +125,9 @@ def shortdesc_stage():
                 continue
 
         # Get info related to this page, on enWP and from Wikidata
-        lead_text = get_lead(page)
         wikidata_sd = get_wikidata_desc(page)
         if verbose_stage:
-            print('\nPROCESSING NEW PAGE IN SHORTDESC_STAGE')
+            print('\nPROCESSING NEW PAGE IN SHORTDESC_STAGE - ', page.title())
             print('lead_text: ', lead_text)
 
         # Do we want this page? Check against page definition
@@ -156,66 +139,58 @@ def shortdesc_stage():
             print(page.title() + ' - Skipped: ' + skip_text)
             continue
 
-        # We have a page to work with. Check whether it matches or fails the criteria
+        # If we have not been able to extract a lead, write a new line to failure_str, for staging later
+
+        if lead_text is None:
+            print(page.title() + ' - FAILED: Lead could not be extracted')
+            errortext = 'Lead could not be extracted'
+            failure_str += page.title() + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + '[None]' + '\n'
+            count_arts += 1
+            count_failure += 1
+            if stop_now(max_arts, count_arts):
+                break
+            continue
+
+        # We have a page to work with. Check against the criteria
         result_criteria = check_criteria(page, lead_text)
 
-        # If the page fails the criteria, note as such and write a new line to failure_str, for staging later
+        # If the page fails, write a new line to failure_str, for staging later
         if not result_criteria[0]:
             errortext = result_criteria[1]
             print(page.title() + ' - FAILED: ' + errortext)
-            if not stop_now(max_stage, count_failure):
-                count_failure += 1
-                failure_str += page.title() + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + lead_text + '\n'
-
-            # If needed, also build up failure_examples_str ready to write to userspace
-            if wp_examples and count_failure_examples <= max_examples:
-                count_failure_examples += 1
-                failure_examples_str += '|-\n'
-                failure_examples_str += '| [[' + page.title() + ']] || ' + errortext + ' || ' + wikidata_sd + ' || ' \
-                                        + lead_text + '\n'
-
+            failure_str += page.title() + '\t' + errortext + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             count_arts += 1
+            count_failure += 1
             if stop_now(max_arts, count_arts):
                 break
-
             continue
 
-        # The page matches the criteria, and we now need to work out the new short description
-        result_gen = shortdesc_generator(page)
+        # The page matches, so we now need to get the new short description
 
+        result_gen = shortdesc_generator(page, lead_text)
         #  Failed to create a usable short description. Treat as if it were a page failure and write to failure_str
         if not result_gen[0]:
             errortext2 = result_gen[1]
             print(page.title() + ' - FAILED: ' + errortext2)
-
-            if not stop_now(max_stage, count_failure):
-                count_failure += 1
-                failure_str += page.title() + ' | ' + errortext2 + ' | ' + wikidata_sd + ' | ' + lead_text + '\n'
-
-            # If needed, also build up failure_examples_str ready to write to userspace
-            if wp_examples and (count_failure_examples <= max_examples):
-                count_failure_examples += 1
-                failure_examples_str += '|-\n'
-                failure_examples_str += '| [[' + page.title() + ']] || ' + errortext2 + ' || ' + wikidata_sd + ' || ' \
-                                        + lead_text + '\n'
-
+            failure_str += page.title() + '\t' + errortext2 + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             count_arts += 1
+            count_failure += 1
             if stop_now(max_arts, count_arts):
                 break
-
             continue
 
         # We have a good draft description!
         description = result_gen[1]
+        count_arts += 1
         print(str(count_arts + 1) + ': ' + page.title() + ' - STAGING NEW SD: ' + description)
 
         # Build up success_str string ready to save to local file
         if not stop_now(max_stage, count_success):
             count_success += 1
-            success_str += page.title() + ' | ' + description + ' | ' + wikidata_sd + ' | ' + lead_text + '\n'
+            success_str += page.title() + '\t' + description + '\t' + wikidata_sd + '\t' + lead_text + '\n'
 
         #  If needed, also build up success_examples_str string ready to write to userspace
-        if wp_examples and count_success_examples <= max_examples:
+        if write_wp_examples and count_success_examples <= max_examples:
             count_success_examples += 1
             success_examples_str += '|-\n'
             success_examples_str += '| [[' + page.title() + ']] || ' + description + ' || ''' + wikidata_sd + ' || ' \
@@ -238,42 +213,25 @@ def shortdesc_stage():
         f1.write(success_str)
 
     # Write examples to my userspace
-    if wp_examples:
-        page = pywikibot.Page(wikipedia, success_examples_wp)
+    if write_wp_examples:
+        page = pywikibot.Page(wikipedia, wp_examples_page)
         header_text = "\n|+\nShortDescBot proposed short descriptions\n!Article\n!Proposed SD\n!(Wikidata " \
                       "SD)\n!Opening words of the lead\n"
         page.text = 'The bot does not use Wikidata\'s short description in any way. It is listed here for reference ' \
                     'only\n{| class="wikitable"' + header_text + success_examples_str + "|}"
         page.save("Saving a sample of ShortDescBot draft short descriptions")
-        print('Examples are at https://en.wikipedia.org/wiki/' + success_examples_wp.replace(' ', '_'))
 
     #  Write the failures to failure_file
     with open(failure_file, 'w') as f2:
         f2.write(failure_str)
-
-    # Write examples of failures to my userspace
-    if wp_examples:
-        page = pywikibot.Page(wikipedia, failure_examples_wp)
-        header_text = "\n|+\nShortDescBot failed pages\n!Article\n!Reason for failure\n!(Wikidata SD)\n!Opening words " \
-                      "" \
-                      "" \
-                      "" \
-                      "" \
-                      "" \
-                      "" \
-                      "" \
-                      "of the lead\n"
-        page.text = 'The bot does not use Wikidata\'s short description in any way. It is listed here for reference ' \
-                    'only' \
-                    ' \n{| class="wikitable"' + header_text + failure_examples_str + "|}"
-        page.save("Save a sample of ShortDescBot failed pages")
-        print('Failures are at https://en.wikipedia.org/wiki/' + failure_examples_wp.replace(' ', '_'))
 
     try:
         targets = count_failure + count_success
         succ_pc = round(100 * count_success / targets, 2)
         fail_pc = round(100 * count_failure / targets, 2)
         print(f'\nThe draft short descriptions are staged in {success_file}, with failures in {failure_file}')
+        if write_wp_examples:
+            print('Examples are at https://en.wikipedia.org/wiki/' + wp_examples_page.replace(' ', '_'))
         print(f'\nTARGETS: {targets}  SUCCESS: {count_success} ({succ_pc}%)  FAILURE: {count_failure} ({fail_pc}%)')
     except:
         print('\nNo target articles found.')
@@ -299,7 +257,7 @@ def shortdesc_add():
 
     # Work through them one by one
     for line in todo:
-        values = line.split('\t')  # **** NOTE CHANGED ****
+        values = line.split('\t')
         page = pywikibot.Page(wikipedia, values[0].strip())
         if not page.exists():
             print(page.title() + ' -  PAGE DOES NOT EXIST')
@@ -361,7 +319,7 @@ def get_wikidata_desc(page):
 # Based on code by Baltasarq CC BY-SA 3.0
 # https://stackoverflow.com/questions/29991917/indices-of-matching-parentheses-in-python
 def find_parens(s, op, cl):  # (Note: op and cl must be single characters)
-    toret = {}
+    return_dict = {}
     pstack = []
 
     for i, c in enumerate(s):
@@ -370,12 +328,12 @@ def find_parens(s, op, cl):  # (Note: op and cl must be single characters)
         elif c == cl:
             if len(pstack) == 0:
                 raise IndexError("No matching closing parens at: " + str(i))
-            toret[pstack.pop()] = i
+            return_dict[pstack.pop()] = i
 
     if len(pstack) > 0:
         raise IndexError("No matching opening parens at: " + str(pstack.pop()))
 
-    return toret
+    return return_dict
 
 
 def clean_text(textstr):
@@ -404,7 +362,7 @@ def get_lead(page):
     try:
         result = find_parens(lead, '{', '}')  # Get start and end indexes for all templates
     except IndexError:
-        return
+        return None
     # Go through templates and replace with ` strings of same length, to avoid changing index positions
     for key in result:
         start = key
@@ -419,7 +377,7 @@ def get_lead(page):
     try:
         result = find_parens(lead, '[', ']')  # Get start and end indexes for all square brackets
     except IndexError:
-        return
+        return None
     # Go through results and replace wikicode representing images with ` strings of same length
     for key in result:
         start = key
