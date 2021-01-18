@@ -41,14 +41,14 @@ title_regex_tf = False
 title_regex = re.compile(r'', re.IGNORECASE)
 
 # Maximum number of articles to look through
-max_arts = 0  # Set to 0 for no limit
+max_arts = 0   # Set to 0 for no limit
 # Set partial=True to enable processing between startpoint and endpoint. Set as False and '' to do all pages
 partial = False
 startpoint = ''
 endpoint = ''
 # Stage to file?
 stage_to_file = True
-max_stage = 0  # Set to 0 for no limit
+max_stage = 0   # Set to 0 for no limit
 success_file = 'success.txt'
 failure_file = 'failures.txt'
 # Write examples to my wp userspace?
