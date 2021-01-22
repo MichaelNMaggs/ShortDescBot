@@ -31,11 +31,10 @@ def shortdesc_generator(page, lead_text):
         'Subspecies': regex_code + 'subspecies'
     }
 
-    # Get title length, ignoring brackets, and make searchable page text
+    # Get title length, ignoring brackets; make compressed searchable version of page text
     title_nobra = re.sub(r'\(.+?\)', '', title).strip()
     title_nobra_len = len(title_nobra.split())
-    text_lower = page.text.lower()
-    text_compressed = text_lower.replace(' ', '')
+    text_compressed = page.text.lower().replace(' ', '')
 
     # Check if this is a species article
     if title_nobra_len > 1 and ('speciesbox' in text_compressed or '|species=' in text_compressed):
@@ -44,9 +43,10 @@ def shortdesc_generator(page, lead_text):
 
     else:  # Not a species article
         if title_nobra_len > 1:
-            return False, "Multi-word title, but apparently not a species"
+            return False, "Multi-word title, but possibly not a species"
         matched = False
-        for sdtype in sdtype_dict:  # Work through the other options
+
+        for sdtype in sdtype_dict:  # Work through the other options. Accept only if exactly one rank matches
             sdregex = sdtype_dict[sdtype]
             if re.search(sdregex, lead_text):
                 if matched:
@@ -55,7 +55,7 @@ def shortdesc_generator(page, lead_text):
                 matched_type = sdtype
                 matched = True
 
-        # Final chance to save an unmatched Genus article that doesn't mention the word but is in a genera category
+        # Final chance to save an unmatched Genus article that doesn't mention 'genus' but is in a genera category
         if not matched:
             if "|genus='''''" in text_compressed:
                 matched_type = 'Genus'
@@ -66,13 +66,13 @@ def shortdesc_generator(page, lead_text):
 
         shortdesc = matched_type + ' of ' + name_plural
 
-    # Check if extinct, and if so add "Extinct" to the start of SD if room to do so
+    # Check if extinct, and if so add "Extinct " to the start of SD if room to do so
     for extinct in extinct_list:
         if extinct.lower() in text_compressed and len(extinct_text + shortdesc) <= 40:
             shortdesc = extinct_text + shortdesc.lower()
             break
 
-    # For monotypic genuses, add "Single-species" to the start of SD if there is room to do so
+    # For monotypic genuses, add "Single-species " to the start of SD if room to do so
     if matched_type == 'Genus':
         for mono in mono_list:
             if mono.lower() in lead_text.lower() and len(mono_text + shortdesc) <= 40:

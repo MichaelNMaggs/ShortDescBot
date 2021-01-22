@@ -3,6 +3,7 @@ throttle.ctrl
 pywikibot.lwp
 *apicache*
 *scratch*
+*idea*
 *.txt
 *.csv
 *.tsv

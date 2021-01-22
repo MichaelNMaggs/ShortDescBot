@@ -4,7 +4,7 @@ import re
 
 import pywikibot
 
-article = 'Actinote thalia'
+article = 'Loxostege kearfottalis'
 wikipedia = pywikibot.Site('en', 'wikipedia')
 page = pywikibot.Page(wikipedia, article)
 
