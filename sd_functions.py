@@ -30,8 +30,8 @@ def check_criteria(page, lead_text):
             if some_word in lead_text:
                 none_found = False
                 break
-    if none_found:
-        return False, 'None of the some_words are present'
+        if none_found:
+            return False, 'None of the some_words are present'
 
     if text_regex_tf:
         result = text_regex.match(lead_text)  # Returns object if a match, or None
@@ -51,8 +51,8 @@ def check_page(page):
     # Ignore articles entitled "List of ..."
     if 'list of' in page.title().lower():
         return False, 'Is a list article'
-    # Check for existing short description
-    if shortdesc_exists(page):
+    # Check for existing short description, where relevant
+    if not allow_sd_changes and shortdesc_exists(page):
         return False, 'Already has short description'
     # Ignore redirects
     if '#REDIRECT' in page.text:
@@ -136,7 +136,7 @@ def clean_text(textstr):
     return textstr
 
 
-# Get the first sentence or sentences (up to 120 chars) of the lead
+# Get the first 150 chars of the lead
 def get_lead(page):
     sections = pywikibot.textlib.extract_sections(page.text, wikipedia)
     lead = sections[0]
@@ -183,8 +183,6 @@ def get_lead(page):
     lead = clean_text(lead)
     # Reduce length to 150, and chop out everything after the last full stop, if there is one
     lead = lead[:150].strip()
-    if '.' in lead:
-        lead = lead.rpartition('.')[0] + '.'
 
     return lead
 

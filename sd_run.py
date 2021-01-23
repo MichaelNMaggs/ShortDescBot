@@ -4,7 +4,7 @@
 # Developed from original code by Mike Peel, GPL v3, 28 November 2020:
 # https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_run.py and
 # https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_functions.py
-# Latest update 18 January 2021.
+# Latest update 23 January 2021.
 
 from shortdesc_add import *
 from shortdesc_stage import *
