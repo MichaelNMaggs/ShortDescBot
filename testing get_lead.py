@@ -3,8 +3,9 @@
 import re
 
 import pywikibot
+from pywikibot.data import api
 
-article = 'Loxostege kearfottalis'
+article = 'Crossing of the Rhine'
 wikipedia = pywikibot.Site('en', 'wikipedia')
 page = pywikibot.Page(wikipedia, article)
 
@@ -103,5 +104,36 @@ def get_lead(page):
     return lead
 
 
-final = get_lead(page)
+# Fetch the page
+def get_pageinfo(site, itemtitle):
+    params = {'action': 'query',
+              'format': 'json',
+              'prop': 'pageprops',
+              'titles': itemtitle}
+    request = api.Request(site=site, parameters=params)
+    return request.submit()
+
+
+# Check for existing sd. Return (sd, 'manual') if standard sd template, or (sd, 'embedded) if eg via an infobox
+def existing_shortdesc(page):
+    description = ''
+    pageinfo = get_pageinfo(wikipedia, page)
+    for item in pageinfo['query']['pages']:
+        try:
+            description = pageinfo['query']['pages'][item]['pageprops']['wikibase-shortdesc']
+        except:
+            pass
+    if '{{short description' in page.text or '{{Short description' in page.text:
+        sdtype = 'manual'
+    else:
+        sdtype = 'embedded'
+    if len(description) > 0:
+        return description, sdtype
+    return '', None
+
+
+final = existing_shortdesc(page)[0]
+# final = get_lead(page)
+
+
 print('\nFINAL\n', final)

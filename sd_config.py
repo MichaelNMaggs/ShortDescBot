@@ -9,14 +9,14 @@ import pywikibot
 # MODE OF OPERATION:
 # 'stage': write to staging file (and optionally examples to userspace)
 # 'edit':  read from staging file and write live edits to namespace
-mode_flag = 'stage'
+mode_flag = 'edit'
 
 #  STAGING CONFIGURATION
 
-name_singular = 'velvet worm'
-name_plural = 'velvet worms'
+name_singular = 'monkey'
+name_plural = 'monkeys'
 # Category to work on
-targetcat = 'Onychophorans'
+targetcat = 'Prehistoric monkeys'
 # Run staging based on from file of Petscan results in tsv format. Works from category unless petscan_tf = True
 petscan_tf = False
 petscan_file = "Petscan.tsv"
@@ -48,7 +48,7 @@ startpoint = ''
 endpoint = ''
 # Stage to file?
 stage_to_file = True
-max_stage = 0  # Set to 0 for no limit
+max_stage = 20  # Set to 0 for no limit
 success_file = 'success.tsv'
 failure_file = 'failures.tsv'
 # Write examples to my wp userspace?
@@ -57,13 +57,14 @@ wp_examples_page = 'User:MichaelMaggs/ShortDesc'
 max_examples = 200
 
 #  EDIT CONFIGURATION
-# Debug: set to 'True' to run live editing in assisted mode (step though and confirm every amendment in advance)
+# assisted_mode: set to 'True' to step though and confirm every live edit in advance
 # Run from normal account, not bot account, if before BAG approval
-debug = True
+assisted_mode = True
 # Set a longer than usual wait time between live wp edits. Normally controlled by put_throttle in user-config.py
 wait_time = 0
-# Set allow_sd_changes to True if the bot is allowed to replace existing descriptions
-allow_sd_changes = False
+# Is the bot allowed to change existing existing manual/embedded descriptions?
+override_manual = True  # Existing description with the {{Short description}} template
+override_embedded = False  # Existing description embedded within eg an infobox
 
 # Initialise the site
 wikipedia = pywikibot.Site('en', 'wikipedia')

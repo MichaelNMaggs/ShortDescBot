@@ -52,8 +52,11 @@ def check_page(page):
     if 'list of' in page.title().lower():
         return False, 'Is a list article'
     # Check for existing short description, where relevant
-    if not allow_sd_changes and shortdesc_exists(page):
-        return False, 'Already has short description'
+    existing_type = existing_shortdesc(page)[1]
+    if not override_manual and existing_type == 'manual':
+        return False, 'Already has manual short description'
+    if not override_embedded and existing_type == 'embedded':
+        return False, 'Already has embedded short description'
     # Ignore redirects
     if '#REDIRECT' in page.text:
         return False, 'Is a redirect'
@@ -71,19 +74,22 @@ def check_page(page):
     return True, ''
 
 
-# Does a description already exist? Check the page info rather just the lead in order to find cases where some
-# template auto-includes it without using the short description template
-def shortdesc_exists(page):
+# Check for existing sd. Return (sd, 'manual') if standard sd template, or (sd, 'embedded) if created eg via an infobox
+def existing_shortdesc(page):
     description = ''
-    test = get_pageinfo(wikipedia, page)
-    for item in test['query']['pages']:
+    pageinfo = get_pageinfo(wikipedia, page)
+    for item in pageinfo['query']['pages']:
         try:
-            description = test['query']['pages'][item]['pageprops']['wikibase-shortdesc']
+            description = pageinfo['query']['pages'][item]['pageprops']['wikibase-shortdesc']
         except:
             pass
+    if '{{short description' in page.text or '{{Short description' in page.text:
+        sdtype = 'manual'
+    else:
+        sdtype = 'embedded'
     if len(description) > 0:
-        return True
-    return False
+        return description, sdtype
+    return '', None
 
 
 # Get the description from Wikidata
@@ -122,8 +128,8 @@ def find_parens(s, op, cl):  # (Note: op and cl must be single characters)
     return return_dict
 
 
+# Remove and clean up unwanted characters in textstr (close_up works for both bold and italic wikicode)
 def clean_text(textstr):
-    # Remove and clean up unwanted characters in textstr (close_up works for both bold and italic wikicode)
     close_up = ["`", "'''", "''", "[", "]", "{", "}", "__NOTOC__"]
     convert_space = ["\t", "\n", "  ", "&nbsp;"]
     for item in close_up:
@@ -241,3 +247,19 @@ def stop_now(max, c):
     elif c < max:
         return False
     return True
+
+
+# Require a 'y' input to process the page. Assisted mode is assumed
+def confirm_edit(tit, ex_desc, ex_type, desc):
+    if ex_type is None:
+        key_input = input(
+            f'Add "{desc}" \nto https://en.wikipedia.org/wiki/{tit.replace(" ", "_")} "? [type y] ')
+        return key_input
+    if ex_type == 'manual' or 'embedded':
+        key_input = input(
+            f'Replace {ex_type} description "{ex_desc}" with "{desc}" \nin'
+            f' https://en.wikipedia.org/wiki/{tit.replace(" ", "_")} "? [type y]')
+        return key_input
+
+    print('ERROR in confirm_edit')
+    return 'n'
