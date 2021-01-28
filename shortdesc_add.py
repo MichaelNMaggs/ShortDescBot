@@ -2,12 +2,19 @@
 
 # Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local success_file
 
-import time
+import datetime
 
+from ok_to_edit import *
 from sd_functions import *
 
 
 def shortdesc_add():
+    ecount = 0
+    ecount_success = 0
+    ecount_failure = 0
+    esuccess_str = ''
+    efailure_str = ''
+
     # Check login
     if username not in ('MichaelMaggs', 'ShortDescBot'):
         print('STOPPING - unexpected username: ', username)
@@ -18,21 +25,21 @@ def shortdesc_add():
 
     # Get the list of articles and the new short descriptions from local success_file
     try:
-        with open(success_file) as f:
-            data = f.read()
-            todo = data.splitlines()
+        with open(success_file) as sfile:
+            data = sfile.read()
+            lines = data.splitlines()
     except:
         print("STOPPING - can't open staging file")
         return
 
-    # Work through them one by one
-    count = 0
-    for line in todo:
+    # Work through lines of success_file, one by one
+
+    for line in lines:
         # Skip line if it's a table header
         if '{|' in line or '|}' in line or line.strip() == '':
             continue
 
-        # Set up for this page, from current line of success_file
+        # Set up for this page, from current line
         values = line.split('\t')
         title = values[0].strip()
         description = values[1].strip()  # This is the new description we want to use
@@ -44,32 +51,23 @@ def shortdesc_add():
         existing_type = existing[1]
 
         # Check for various things before allowing a page edit
-        if not page.exists():
-            print(page.title() + ' -   NO EDIT MADE: Page does not exist')
-            return
-        if page.text == '':
-            print(page.title() + ' - NO EDIT MADE: Page has been blanked')
-            continue
-        if not allow_bots(page.text, username):
-            print(page.title() + ' - NO EDIT MADE: Bot is excluded via the Bots template')
-            continue
-        if description == existing_desc:
-            print(page.title() + f' - NO EDIT MADE: No change to "{description}"')
-            continue
-
-        # Don't edit if not allowed to change an existing description
-        if not override_manual and existing_type == 'manual':
-            print(page.title() + ' - NO EDIT MADE: Page now has a manual description')
-            continue
-        if not override_embedded and existing_type == 'embedded':
-            print(page.title() + ' - NO EDIT MADE: Page now has an embedded description')
-            continue
+        try:
+            if not ok_to_edit(page, title, description, username, existing_desc, existing_type, override_manual,
+                              override_embedded):
+                continue
+        except AssertionError as err:
+            return  # Unexpected error in page title
 
         # Get manual confirmation if in assisted mode
-        if assisted_mode and confirm_edit(title, existing_desc, existing_type, description) != 'y':
-            continue
+        if assisted_mode:
+            key_input = confirm_edit(title, existing_desc, existing_type, description)
+            if key_input == 's':
+                break
+            if key_input != 'y':
+                continue
 
         # OK to edit at this point
+        ecount += 1
 
         # Add a new description where none currently exists
         if existing_type is None:
@@ -78,22 +76,29 @@ def shortdesc_add():
                 edit_text = '[[User:ShortDescBot|ShortDescBot]] adding [[Wikipedia:Short description|short ' \
                             'description]]'
             page.text = '{{Short description|' + description + '}}\n' + page.text
-            print(str(count + 1) + ': ' + page.title() + f' - WRITING NEW SD: ' + description)
+            print(str(ecount + 1) + ': ' + title + f' - WRITING NEW SD: ' + description)
+
             try:
                 page.save(edit_text + ' "' + description + '"', minor=False)
-                count += 1
             except:
-                print(f'UNABLE TO EDIT {page.title()}. Will retry in 1 minute')
-                count -= 1
+                print(f'UNABLE TO EDIT {title}. Will retry in 1 minute')
                 time.sleep(60)
                 try:
                     page.save(edit_text + ' "' + description + '"', minor=False)
-                    count += 1
                 except:
-                    print(f'STILL UNABLE TO EDIT {page.title()}. Skipping this page')
-                    count -= 1
-
-        # Page has an existing description
+                    print(f'STILL UNABLE TO EDIT {title}. Skipping this page')
+                    # Build up efailure_str string ready to log to local file
+                    efailure_str += title + '\t FAILED: ' + description + '\n'
+                    ecount -= 1
+                    ecount_failure += 1
+                else:  # OK on second attempt
+                    # Build up esuccess_str string ready to log to local file
+                    esuccess_str += title + '\t' + description + '\n'
+                    ecount_success += 1
+            else:  # Succeeded on first attempt
+                # Build up esuccess_str string ready to log to local file
+                esuccess_str += title + '\t' + description + '\n'
+                ecount_success += 1
 
         # Override an existing embedded description
         if existing_type == 'embedded':
@@ -102,20 +107,29 @@ def shortdesc_add():
                 edit_text = '[[User:ShortDescBot|ShortDescBot]] overriding [[Wikipedia:Short description|short ' \
                             'description]] from infobox'
             page.text = '{{Short description|' + description + '}}\n' + page.text
-            print(str(count + 1) + ': ' + page.title() + f' - OVERRIDING EMBEDDED SD: ' + description)
+            print(str(ecount + 1) + ': ' + title + f' - OVERRIDING EMBEDDED SD: ' + description)
+
             try:
                 page.save(edit_text + ' "' + description + '"', minor=False)
-                count += 1
             except:
-                print(f'UNABLE TO EDIT {page.title()}. Will retry in 1 minute')
-                count -= 1
+                print(f'UNABLE TO EDIT {title}. Will retry in 1 minute')
                 time.sleep(60)
                 try:
                     page.save(edit_text + ' "' + description + '"', minor=False)
-                    count += 1
                 except:
-                    print(f'STILL UNABLE TO EDIT {page.title()}. Skipping this page')
-                    count -= 1
+                    print(f'STILL UNABLE TO EDIT {title}. Skipping this page')
+                    # Build up efailure_str string ready to log to local file
+                    efailure_str += title + '\t FAILED: ' + description + '\n'
+                    ecount -= 1
+                    ecount_failure += 1
+                else:  # OK on second attempt
+                    # Build up esuccess_str string ready to log to local file
+                    esuccess_str += title + '\t' + description + '\n'
+                    ecount_success += 1
+            else:  # Succeeded on first attempt
+                # Build up esuccess_str string ready to log to local file
+                esuccess_str += title + '\t' + description + '\n'
+                ecount_success += 1
 
         # Replace/edit a manual short description
         if existing_type == 'manual':
@@ -134,22 +148,59 @@ def shortdesc_add():
                 edit_text = '[[User:ShortDescBot|ShortDescBot]] changing [[Wikipedia:Short description|short ' \
                             'description]] from'
             page.text = '{{Short description|' + description + '}}\n' + page.text
-            print(str(count + 1) + ': ' + page.title() + f' - CHANGING MANUAL SD: ' + description)
+            print(str(ecount + 1) + ': ' + title + f' - CHANGING MANUAL SD: ' + description)
+
             try:
                 page.save(edit_text + ' "' + existing_desc + '" to "' + description + '"', minor=False)
-                count += 1
             except:
-                print(f'UNABLE TO EDIT {page.title()}. Will retry in 1 minute')
-                count -= 1
+                print(f'UNABLE TO EDIT {title}. Will retry in 1 minute')
                 time.sleep(60)
                 try:
                     page.save(edit_text + ' "' + description + '"', minor=False)
-                    count += 1
                 except:
-                    print(f'STILL UNABLE TO EDIT {page.title()}. Skipping this page')
-                    count -= 1
+                    print(f'STILL UNABLE TO EDIT {title}. Skipping this page')
+                    # Build up efailure_str string ready to log to local file
+                    efailure_str += title + '\t FAILED: ' + description + '\n'
+                    ecount -= 1
+                    ecount_failure += 1
+                else:  # OK on second attempt
+                    # Build up esuccess_str string ready to log to local file
+                    esuccess_str += title + '\t' + description + '\n'
+                    ecount_success += 1
+            else:  # Succeeded on first attempt
+                # Build up esuccess_str string ready to log to local file
+                esuccess_str += title + '\t' + description + '\n'
+                ecount_success += 1
 
         time.sleep(wait_time)
 
-    print(f'\nDONE! Added short descriptions to {str(count)} articles')
+    # Now write to one-off logging files
+    now = datetime.datetime.now()
+    dt_extension = f'{now:%Y-%m-%d (%H %M)}.tsv'
+    print('\n')
+    try:
+        if esuccess_str != '':
+            log_success_file = 'log_success ' + name_plural + ' ' + dt_extension
+            with open(log_success_file, 'w') as lsfile:
+                lsfile.write(esuccess_str)
+            print('Successes logged in ' + log_success_file)
+        if efailure_str != '':
+            log_failure_file = 'log_failure ' + name_plural + ' ' + dt_extension
+            with open(log_failure_file, 'w') as lffile:
+                lffile.write(efailure_str)
+            print('Failures logged in ' + log_failure_file)
+    except:
+        print(f'\nSTOPPING: Unable to create or write to logging files')
+        return
+
+    try:
+        etargets = ecount_failure + ecount_success
+        esucc_pc = round(100 * ecount_success / etargets, 2)
+        efail_pc = round(100 * ecount_failure / etargets, 2)
+        print(
+            f'EDIT TARGETS: {etargets}  SUCCESS: {ecount_success} ({esucc_pc}%)  FAILURE: {ecount_failure} ('
+            f'{efail_pc}%)')
+    except:
+        print('\nNo edit target articles found.')
+
     return

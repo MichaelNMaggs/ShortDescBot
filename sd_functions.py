@@ -1,6 +1,6 @@
 # See sd_run.py for status and copyright release information
 
-
+import time
 import mwparserfromhell
 from pywikibot.data import api
 
@@ -253,7 +253,7 @@ def stop_now(max, c):
 def confirm_edit(tit, ex_desc, ex_type, desc):
     if ex_type is None:
         key_input = input(
-            f'Add "{desc}" \nto https://en.wikipedia.org/wiki/{tit.replace(" ", "_")} "? [type y] ')
+            f'Add "{desc}" \nto https://en.wikipedia.org/wiki/{tit.replace(" ", "_")} "? [y]es/[s]top ')
         return key_input
     if ex_type == 'manual' or 'embedded':
         key_input = input(
@@ -263,3 +263,4 @@ def confirm_edit(tit, ex_desc, ex_type, desc):
 
     print('ERROR in confirm_edit')
     return 'n'
+

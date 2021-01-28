@@ -8,3 +8,4 @@ pywikibot.lwp
 *.csv
 *.tsv
 *.numbers
+*log files*
