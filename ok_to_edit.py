@@ -1,3 +1,5 @@
+# See sd_run.py for status and copyright release information
+
 from sd_functions import allow_bots
 
 
@@ -27,5 +29,12 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
         print(title + f' - ERROR: page.title is "{page.title()}", but title from file is "{title}"')
         raise AssertionError
         return False
+
+    #  **** MOTH UPDATE RUN ONLY  *********
+
+    if existing_desc not in ('Species of moth', 'Genus of moths'):
+        print(title + ' - NO EDIT MADE: Moth article has a non-bot description')
+        return False
+
 
     return True

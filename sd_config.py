@@ -13,20 +13,20 @@ mode_flag = 'edit'
 
 #  STAGING CONFIGURATION
 
-name_singular = 'monkey'
-name_plural = 'monkeys'
+name_singular = 'moth'
+name_plural = 'moths'
 # Category to work on
-targetcat = 'Prehistoric monkeys'
+targetcat = ''
 # Run staging based on from file of Petscan results in tsv format. Works from category unless petscan_tf = True
-petscan_tf = False
+petscan_tf = True
 petscan_file = "Petscan.tsv"
 
 recurse_cats = False
-verbose_stage = False
+verbose_stage = True
 
 # Define the pages that that we are interested in. Others will be skipped without comment
 require_infobox = True
-infobox_strings = ['Speciesbox', 'Taxobox']  # Covers Automatic Taxobox and Subspeciesbox
+infobox_strings = ['Speciesbox', 'Taxobox']  # Covers Automatic Taxobox and Subspeciesbox (case insensitive)
 sole_infobox = False  # Skip pages that have more than one infobox (applies only if require_infobox = True)
 
 # Define any one-off special test criteria. Can usually skip this. Pages that fail any of these will be recorded
@@ -49,7 +49,7 @@ endpoint = ''
 # Stage to file?
 stage_to_file = True
 max_stage = 20  # Set to 0 for no limit
-success_file = 'success.tsv'
+success_file = 'success.tsv'    #  < This is the output file for staging and the input file for editing
 failure_file = 'failures.tsv'
 # Write examples to my wp userspace?
 write_wp_examples = False

@@ -62,8 +62,8 @@ def check_page(page):
         return False, 'Is a redirect'
     # Check for required infobox(es)
     if require_infobox:
-        for option in infobox_strings:  # Check through the various strings that identify an infobox
-            if option.lower() in page.text.lower():
+        for item in infobox_strings:  # Check through the various strings that identify an infobox
+            if item.lower() in page.text.lower():
                 has_infobox = True
         if not has_infobox:
             return False, 'Does not have infobox'
@@ -258,7 +258,7 @@ def confirm_edit(tit, ex_desc, ex_type, desc):
     if ex_type == 'manual' or 'embedded':
         key_input = input(
             f'Replace {ex_type} description "{ex_desc}" with "{desc}" \nin'
-            f' https://en.wikipedia.org/wiki/{tit.replace(" ", "_")} "? [type y]')
+            f' https://en.wikipedia.org/wiki/{tit.replace(" ", "_")} "? [y]es/[s]top ')
         return key_input
 
     print('ERROR in confirm_edit')

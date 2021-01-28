@@ -1,14 +1,12 @@
 # See sd_run.py for status and copyright release information
 
-# Main function for 'stage' mode
-# Calls check_page, check_criteria and shortdesc_generator
-
 from pywikibot import pagegenerators
 
 from sd_functions import *
 from shortdesc_generator import *
 
-
+# Main function for 'stage' mode
+# Calls check_page, check_criteria and shortdesc_generator
 def shortdesc_stage():
     count_arts = 0
     count_success = 0
@@ -29,7 +27,7 @@ def shortdesc_stage():
             values = line.split('\t')
             if values[0] == 'number':  # Ignore any header line
                 continue
-            title = values[1]
+            title = values[0]
             page = pywikibot.Page(wikipedia, title)
             pages.append(page)
 
@@ -50,7 +48,6 @@ def shortdesc_stage():
 
         if verbose_stage:
             print('\nCHECKING PAGE IN SHORTDESC_STAGE - ', page.title())
-            print('lead_text: ', lead_text)
 
         # Do we want this page? Check against page definition
         result_page = check_page(page)

@@ -1,13 +1,12 @@
 # See sd_run.py for status and copyright release information
 
-# Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local success_file
 
 import datetime
 
 from ok_to_edit import *
 from sd_functions import *
 
-
+# Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local success_file
 def shortdesc_add():
     ecount = 0
     ecount_success = 0
@@ -175,12 +174,15 @@ def shortdesc_add():
         time.sleep(wait_time)
 
     # Now write to one-off logging files
+    print('\n')
     now = datetime.datetime.now()
     dt_extension = f'{now:%Y-%m-%d (%H %M)}.tsv'
-    print('\n')
+    name_start = 'log_success '
+    if username == 'MichaelMaggs':
+        name_start = 'log_success MNM '
     try:
         if esuccess_str != '':
-            log_success_file = 'log_success ' + name_plural + ' ' + dt_extension
+            log_success_file = name_start + name_plural + ' ' + dt_extension
             with open(log_success_file, 'w') as lsfile:
                 lsfile.write(esuccess_str)
             print('Successes logged in ' + log_success_file)

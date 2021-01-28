@@ -1,17 +1,17 @@
 # See sd_run.py for status and copyright release information
 
-# Generate the draft SD. Called by shortdesc_stage. Returns (True, description) for good result, or (False, errortext)
-# NOTE: For each task, the code here needs to be hand-crafted
-
 from sd_config import *
 
 
+# Generate the draft SD. Called by shortdesc_stage. Returns (True, description) for good result, or (False, errortext)
+# NOTE: For each task, the code here needs to be hand-crafted
 def shortdesc_generator(page, lead_text):
     title = page.title()
     matched_type = ''
     mono_list_page = ['[[category:monotypic']
-    mono_list_lead = ['monotypic', 'monospecific', ' a single species ', ' the single species',
-                      'single-species']  # Only for genus articles
+    mono_list_lead = ['monotypic', 'monospecific', ' a single species', ' the single species',
+                      ' single-species', ' only one species', ' only the one species',
+                      'its only species']  # Only for genus articles
     mono_sd_prefix = 'Single-species '
     extinct_list_page = ['isafossil', 'isanextinct', '{{extinct}}', '|status=ex', '|extinct=y', '|extinct=t',
                          '|type_species=†', 'extinctions]]', '[[category:prehistoric']
