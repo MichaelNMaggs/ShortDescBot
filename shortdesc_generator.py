@@ -111,4 +111,3 @@ def shortdesc_generator(page, lead_text):
                 return True, shortdesc
 
     return False, 'Error in sd_config'
-
