@@ -10,7 +10,7 @@ pywikibot.lwp
 *.tsv
 *.numbers
 *log files*
-log_*
+*log_*
 *petscan*
 *success*
 *failures*

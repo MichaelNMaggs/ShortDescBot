@@ -4,7 +4,7 @@ import time
 import mwparserfromhell
 from pywikibot.data import api
 
-from shortdesc_generator import *
+from sd_generator import *
 
 
 # FUNCTIONS
