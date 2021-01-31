@@ -181,12 +181,12 @@ def shortdesc_add():
     if username == 'MichaelMaggs':
         name_start = 'log_success MNM '
     try:
-        if esuccess_str != '':
+        if esuccess_str:
             log_success_file = name_start + name_plural + ' ' + dt_extension
             with open(log_success_file, 'w') as lsfile:
                 lsfile.write(esuccess_str)
             print('Successes logged in ' + log_success_file)
-        if efailure_str != '':
+        if efailure_str:
             log_failure_file = 'log_failure ' + name_plural + ' ' + dt_extension
             with open(log_failure_file, 'w') as lffile:
                 lffile.write(efailure_str)

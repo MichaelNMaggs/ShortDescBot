@@ -57,7 +57,7 @@ wp_examples_page = 'User:MichaelMaggs/ShortDesc'
 max_examples = 200
 
 #  EDIT CONFIGURATION
-# assisted_mode: set to 'True' to step though and confirm every live edit in advance
+# assisted_mode: set to True to step though and confirm every live edit in advance
 # Run from normal account, not bot account, if before BAG approval
 assisted_mode = True
 # Set a longer than usual wait time between live wp edits. Normally controlled by put_throttle in user-config.py

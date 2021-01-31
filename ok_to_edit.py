@@ -36,5 +36,4 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
         print(title + ' - NO EDIT MADE: Moth article has a non-bot description')
         return False
 
-
     return True

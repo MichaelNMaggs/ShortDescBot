@@ -71,21 +71,44 @@ def shortdesc_generator(page, lead_text):
 
         shortdesc = matched_type + ' of ' + name_plural
 
-    # Check for extinction. Add "Extinct " to the start of SD if room to do so
+    # Check for extinction and monotypy
+    isextinct = False
+    ismono = False
     for extinct in extinct_list_page:  # Parse entire page
-        if extinct.lower() in text_compressed and len(extinct_sd_prefix + shortdesc) <= 40:
-            shortdesc = extinct_sd_prefix + shortdesc.lower()
+        if extinct.lower() in text_compressed:
+            isextinct = True
             break
-
-    # For monotypic genuses, add "Single-species " to the start of SD if room to do so
     if matched_type == 'Genus':
         for mono in mono_list_page:  # Parse entire page
-            if mono.lower() in text_compressed and len(mono_sd_prefix + shortdesc) <= 40:
-                shortdesc = mono_sd_prefix + shortdesc.lower()
-                return True, shortdesc
-        for mono in mono_list_lead:  # Parse the lead only
-            if mono.lower() in lead_text.lower() and len(mono_sd_prefix + shortdesc) <= 40:
-                shortdesc = mono_sd_prefix + shortdesc.lower()
+            if mono.lower() in text_compressed:
+                ismono = True
+                break
+            for mono in mono_list_lead:  # Parse the lead only
+                if mono.lower() in lead_text.lower():
+                    ismono = True
+                    break
+
+    # Return best possible description of 40 chars or less, prioritizing extinction
+    if not (isextinct and ismono):
+        return True, shortdesc
+    if ismono and not isextinct:
+        if len(mono_sd_prefix + shortdesc) <= 40:
+            shortdesc = mono_sd_prefix + shortdesc.lower()
+            return True, shortdesc
+    if isextinct and not ismono:
+        if len(extinct_sd_prefix + shortdesc) <= 40:
+            shortdesc = extinct_sd_prefix + shortdesc.lower()
+            return True, shortdesc
+    if isextinct and ismono:
+        shortdesc_test = extinct_sd_prefix + mono_sd_prefix.lower() + shortdesc.lower()
+        if len(shortdesc_test) <= 40:
+            return True, shortdesc_test
+        else:
+            shortdesc_test = extinct_sd_prefix + shortdesc.lower()
+            if len(shortdesc_test) <= 40:
+                return True, shortdesc_test
+            else:
                 return True, shortdesc
 
-    return True, shortdesc
+    return False, 'Error in sd_config'
+

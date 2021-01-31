@@ -4,7 +4,7 @@
 # Developed from original code by Mike Peel, GPL v3, 28 November 2020:
 # https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_run.py and
 # https://bitbucket.org/mikepeel/wikicode/src/master/shortdesc_functions.py
-# Latest update 26 January 2021
+# Latest update 31 January 2021
 
 from shortdesc_add import *
 from shortdesc_stage import *
@@ -27,10 +27,7 @@ if mode_flag == 'stage':
 # Run live editing code
 if mode_flag == 'edit':
     print('\nLogged in as ' + username)
-    if assisted_mode:
-        run_type = 'assisted'
-    else:
-        run_type = 'automatic'
+    run_type = 'assisted' if assisted_mode else 'automatic'
     if override_manual or override_embedded:
         print('WARNING: the bot may change existing descriptions')
     input(f'***** READY TO WRITE LIVE EDITS in {run_type} mode. Press return to continue\n')

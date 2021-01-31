@@ -2,6 +2,7 @@
 throttle.ctrl
 pywikibot.lwp
 *apicache*
+*pycache*
 *scratch*
 *idea*
 *.txt
@@ -9,3 +10,7 @@ pywikibot.lwp
 *.tsv
 *.numbers
 *log files*
+log_*
+*petscan*
+*success*
+*failures*
