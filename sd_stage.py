@@ -8,13 +8,8 @@ from sd_generator import *
 # Main function for 'stage' mode
 # Calls check_page, check_criteria and shortdesc_generator
 def shortdesc_stage():
-    count_arts = 0
-    count_success = 0
-    count_success_examples = 0
-    count_failure = 0
-    success_str = ''
-    success_examples_str = ''
-    failure_str = ''
+    count_arts = count_success = count_success_examples = count_failure = 0
+    success_str = success_examples_str = failure_str = ''
     tripped = False
 
     # Set up pages as iterable, from cat or from Petscan file. Each item in pages must be created as a Pywikibot object

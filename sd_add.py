@@ -3,16 +3,13 @@
 
 import datetime
 
-from ok_to_edit import *
+from sd_edit_allowed import *
 from sd_functions import *
 
 # Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local success_file
 def shortdesc_add():
-    ecount = 0
-    ecount_success = 0
-    ecount_failure = 0
-    esuccess_str = ''
-    efailure_str = ''
+    ecount = ecount_success = ecount_failure = 0
+    esuccess_str = efailure_str = ''
 
     # Check login
     if username not in ('MichaelMaggs', 'ShortDescBot'):

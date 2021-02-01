@@ -14,7 +14,7 @@ def check_criteria(page, lead_text):
     # We need to match on *everything* specified in the criteria
     # Returns (True, '') or (False, reason)
 
-    if lead_text == '':
+    if not lead_text:
         return False, 'Could not create lead (unpaired delimiters)'
     if required_words:  # Skip if required_words == []
         for required in required_words:

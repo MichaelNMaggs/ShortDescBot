@@ -8,7 +8,7 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
     if not page.exists():
         print(title + ' -   NO EDIT MADE: Page does not exist')
         return False
-    if page.text == '':
+    if not page.text:
         print(title + ' - NO EDIT MADE: Page has been blanked')
         return False
     if not allow_bots(page.text, username):
