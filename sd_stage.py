@@ -45,11 +45,10 @@ def shortdesc_stage():
             print('\nCHECKING PAGE IN SHORTDESC_STAGE - ', page.title())
 
         # Do we want this page? Check against page definition
-        result_page = check_page(page)
+        result_page, skip_text = check_page(page)
 
         # Should we skip this page? (not recorded in the list of failures)
-        if not result_page[0]:
-            skip_text = result_page[1]
+        if not result_page:
             print(page.title() + ' - Skipped: ' + skip_text)
             continue
 
@@ -67,12 +66,11 @@ def shortdesc_stage():
             continue
 
         # We have a page to work with. Check against the criteria and get Wikidata SD
-        result_criteria = check_criteria(page, lead_text)
+        result_criteria, errortext = check_criteria(page, lead_text)
         wikidata_sd = get_wikidata_desc(page)
 
         # If the page fails, write a new line to failure_str, for staging later
-        if not result_criteria[0]:
-            errortext = result_criteria[1]
+        if not result_criteria:
             print(str(count_arts) + ': ' + page.title() + ' - FAILED: ' + errortext)
             failure_str += page.title() + '\t' + errortext + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             count_failure += 1
@@ -81,12 +79,11 @@ def shortdesc_stage():
             continue
 
         # The page matches, so we now need to get the new short description
-        result_gen = shortdesc_generator(page, lead_text)
+        result_gen, result_gen_txt = shortdesc_generator(page, lead_text)
         #  If no usable short description, treat as a page failure and write to failure_st
-        if not result_gen[0]:
-            errortext2 = result_gen[1]
-            print(str(count_arts) + ': ' + page.title() + ' - FAILED: ' + errortext2)
-            failure_str += page.title() + '\t' + errortext2 + '\t' + wikidata_sd + '\t' + lead_text + '\n'
+        if not result_gen:
+            print(str(count_arts) + ': ' + page.title() + ' - FAILED: ' + result_gen_txt)
+            failure_str += page.title() + '\t' + result_gen_txt + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             count_failure += 1
             if stop_now(max_arts, count_arts):
                 break
@@ -94,7 +91,7 @@ def shortdesc_stage():
 
         # We have a good draft description!
         count_success += 1
-        description = result_gen[1]
+        description = result_gen_txt
         print(str(count_arts) + ': ' + page.title() + f' - STAGING NEW SD {count_success}: ' + description)
 
         # Build up success_str string ready to save to local file

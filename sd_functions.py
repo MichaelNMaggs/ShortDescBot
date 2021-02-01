@@ -210,6 +210,7 @@ def get_pageinfo(site, itemtitle):
               'prop': 'pageprops',
               'titles': itemtitle}
     request = api.Request(site=site, parameters=params)
+
     return request.submit()
 
 

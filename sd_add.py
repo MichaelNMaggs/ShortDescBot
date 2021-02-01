@@ -42,9 +42,7 @@ def shortdesc_add():
         page = pywikibot.Page(wikipedia, title)
 
         # Get existing description and type: manual or embedded
-        existing = existing_shortdesc(page)
-        existing_desc = existing[0]
-        existing_type = existing[1]
+        existing_desc, existing_type = existing_shortdesc(page)
 
         # Check for various things before allowing a page edit
         try:

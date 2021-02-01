@@ -1,4 +1,4 @@
 # ShortDescBot
-Bot to add short descriptions to the English Wikipedia
+Bot to improve short descriptions on the English Wikipedia
 
 See https://en.wikipedia.org/wiki/User:ShortDescBot
