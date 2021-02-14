@@ -202,3 +202,4 @@ def shortdesc_add():
         print('\nNo edit target articles found.')
 
     return
+

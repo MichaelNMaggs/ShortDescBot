@@ -32,3 +32,4 @@ if mode_flag == 'edit':
         print('WARNING: the bot may change existing descriptions')
     input(f'***** READY TO WRITE LIVE EDITS in {run_type} mode. Press return to continue\n')
     shortdesc_add()
+

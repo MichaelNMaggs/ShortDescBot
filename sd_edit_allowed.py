@@ -31,3 +31,4 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
         return False
 
     return True
+

@@ -21,7 +21,6 @@ targetcat = ''
 # Run staging based on from file of Petscan results in tsv format. Works from category unless petscan_tf = True
 petscan_tf = True
 petscan_file = "Petscan.tsv"
-
 recurse_cats = False
 verbose_stage = True
 
