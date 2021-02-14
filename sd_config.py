@@ -9,6 +9,7 @@ import pywikibot
 # MODE OF OPERATION:
 # 'stage': write to staging file (and optionally examples to userspace)
 # 'edit':  read from staging file and write live edits to namespace
+#  Note: When writing live edits, the SDs are taken from the staging file, and are not re-calculated anew
 mode_flag = 'edit'
 
 #  STAGING CONFIGURATION
@@ -30,7 +31,7 @@ infobox_strings = ['Speciesbox', 'Taxobox']  # Covers Automatic Taxobox and Subs
 sole_infobox = False  # Skip pages that have more than one infobox (applies only if require_infobox = True)
 
 # Define any one-off special test criteria. Can usually skip this. Pages that fail any of these will be recorded
-# These just restrict the pages from the Cat or Petscan input are considered as targets, not how they will be processed
+# These restrict the pages from the Cat/Petscan input that are considered as targets, not how they will be processed
 # NOTE: For how the targets are to be processed, need to hand-craft the code in shortdesc_generator
 required_words = []  # Must have all of these
 some_words = []  # Must have at least one of these
@@ -59,7 +60,7 @@ max_examples = 200
 #  EDIT CONFIGURATION
 # assisted_mode: set to True to step though and confirm every live edit in advance
 # Run from normal account, not bot account, if before BAG approval
-assisted_mode = True
+assisted_mode = False
 # Set a longer than usual wait time between live wp edits. Normally controlled by put_throttle in user-config.py
 wait_time = 0
 # Is the bot allowed to change existing existing manual/embedded descriptions?

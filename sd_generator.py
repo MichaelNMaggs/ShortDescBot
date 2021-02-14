@@ -8,14 +8,8 @@ from sd_config import *
 def shortdesc_generator(page, lead_text):
     title = page.title()
     matched_type = ''
-    mono_list_page = ['[[category:monotypic']
-    mono_list_lead = ['monotypic', 'monospecific', ' a single species', ' the single species',
-                      ' single-species', ' only one species', ' only the one species',
-                      'its only species']  # Only for genus articles
-    mono_sd_prefix = 'Single-species '
     extinct_list_page = ['isafossil', 'isanextinct', '{{extinct}}', '|status=ex', '|extinct=y', '|extinct=t',
                          '|type_species=†', 'extinctions]]', '[[category:prehistoric']
-    extinct_sd_prefix = 'Extinct '
     regex_code = "(is a |are a |is an |are an |was a |were a |was an |were an )(?:(?! in the ).){,30}"
     # Need to ensure eg that "is an order of fungi in the class Tremellomycetes" maps to 'Order' not Class'
     # So, regex covers:  "is a" + ... maximum of 30 chars not including 'in the' ... + "order"
@@ -71,44 +65,11 @@ def shortdesc_generator(page, lead_text):
 
         shortdesc = matched_type + ' of ' + name_plural
 
-    # Check for extinction and monotypy
-    isextinct = False
-    ismono = False
+    # Adjust SD if extinct
     for extinct in extinct_list_page:  # Parse entire page
-        if extinct.lower() in text_compressed:
-            isextinct = True
-            break
-    if matched_type == 'Genus':
-        for mono in mono_list_page:  # Parse entire page
-            if mono.lower() in text_compressed:
-                ismono = True
-                break
-            for mono in mono_list_lead:  # Parse the lead only
-                if mono.lower() in lead_text.lower():
-                    ismono = True
-                    break
-
-    # Return best possible description of 40 chars or less, prioritizing extinction
-    if not (isextinct and ismono):
-        return True, shortdesc
-    if ismono and not isextinct:
-        if len(mono_sd_prefix + shortdesc) <= 40:
-            shortdesc = mono_sd_prefix + shortdesc.lower()
+        if extinct.lower() in text_compressed and len('Extinct ' + shortdesc) <= 40:
+            shortdesc = 'Extinct ' + shortdesc.lower()
             return True, shortdesc
-    if isextinct and not ismono:
-        if len(extinct_sd_prefix + shortdesc) <= 40:
-            shortdesc = extinct_sd_prefix + shortdesc.lower()
-            return True, shortdesc
-    if isextinct and ismono:
-        shortdesc_test = extinct_sd_prefix + mono_sd_prefix.lower() + shortdesc.lower()
-        if len(shortdesc_test) <= 40:
-            return True, shortdesc_test
-        else:
-            shortdesc_test = extinct_sd_prefix + shortdesc.lower()
-            if len(shortdesc_test) <= 40:
-                return True, shortdesc_test
-            else:
-                return True, shortdesc
 
-    return False, 'Error in sd_config'
+    return True, shortdesc
 

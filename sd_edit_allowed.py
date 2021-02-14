@@ -30,10 +30,4 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
         raise AssertionError
         return False
 
-    #  **** MOTH UPDATE RUN ONLY  *********
-
-    if existing_desc not in ('Species of moth', 'Genus of moths'):
-        print(title + ' - NO EDIT MADE: Moth article has a non-bot description')
-        return False
-
     return True
