@@ -5,6 +5,7 @@ from pywikibot import pagegenerators
 from sd_functions import *
 from sd_generator import *
 
+
 # Main function for 'stage' mode
 # Calls check_page, check_criteria and shortdesc_generator
 def shortdesc_stage():

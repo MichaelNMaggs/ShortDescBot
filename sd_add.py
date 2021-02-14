@@ -6,6 +6,7 @@ import datetime
 from sd_edit_allowed import *
 from sd_functions import *
 
+
 # Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local success_file
 def shortdesc_add():
     ecount = ecount_success = ecount_failure = 0

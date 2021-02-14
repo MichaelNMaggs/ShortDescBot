@@ -1,6 +1,5 @@
 # See sd_run.py for status and copyright release information
 
-import time
 import mwparserfromhell
 from pywikibot.data import api
 
@@ -264,4 +263,3 @@ def confirm_edit(tit, ex_desc, ex_type, desc):
 
     print('ERROR in confirm_edit')
     return 'n'
-

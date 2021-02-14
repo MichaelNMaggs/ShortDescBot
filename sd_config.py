@@ -50,7 +50,7 @@ endpoint = ''
 # Stage to file?
 stage_to_file = True
 max_stage = 20  # Set to 0 for no limit
-success_file = 'success.tsv'    #  < This is the output file for staging and the input file for editing
+success_file = 'success.tsv'  # < This is the output file for staging and the input file for editing
 failure_file = 'failures.tsv'
 # Write examples to my wp userspace?
 write_wp_examples = False
