@@ -23,7 +23,7 @@ def shortdesc_stage():
             values = line.split('\t')
             if values[0] == 'number':  # Ignore any header line
                 continue
-            title = values[0]
+            title = values[1]  # Title field
             page = pywikibot.Page(wikipedia, title)
             pages.append(page)
 

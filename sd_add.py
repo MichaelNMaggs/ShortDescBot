@@ -1,7 +1,7 @@
 # See sd_run.py for status and copyright release information
 
 
-import datetime
+import time, datetime
 
 from sd_edit_allowed import *
 from sd_functions import *
@@ -50,7 +50,7 @@ def shortdesc_add():
             if not ok_to_edit(page, title, description, username, existing_desc, existing_type, override_manual,
                               override_embedded):
                 continue
-        except AssertionError as err:
+        except AssertionError:
             return  # Unexpected error in page title
 
         # Get manual confirmation if in assisted mode

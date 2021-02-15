@@ -80,8 +80,10 @@ def existing_shortdesc(page):
     for item in pageinfo['query']['pages']:
         try:
             description = pageinfo['query']['pages'][item]['pageprops']['wikibase-shortdesc']
-        except:
-            pass
+            # print('DESCRIPTION FOUND: ', description)
+        except:  # Throws an exception if there is no embedded or manual description
+            # print('NO DESCRIPTION FOUND')
+            return '', None
     if '{{short description' in page.text or '{{Short description' in page.text:
         sdtype = 'manual'
     else:
