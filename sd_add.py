@@ -3,11 +3,12 @@
 
 import time, datetime
 
-from sd_edit_allowed import *
+from sd_edit_allowed import ok_to_edit
 from sd_functions import *
+import sd_config
 
 
-# Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local success_file
+# Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local staged
 def shortdesc_add():
     ecount = ecount_success = ecount_failure = 0
     esuccess_str = efailure_str = ''
@@ -20,16 +21,16 @@ def shortdesc_add():
         print(f'STOPPING - cannot run bot in automatic mode with Username:{username}')
         return
 
-    # Get the list of articles and the new short descriptions from local success_file
+    # Get the list of articles and the new short descriptions from local staged
     try:
-        with open(success_file) as sfile:
+        with open(staged) as sfile:
             data = sfile.read()
             lines = data.splitlines()
     except:
         print("STOPPING - can't open staging file")
         return
 
-    # Work through lines of success_file, one by one
+    # Work through lines of staged, one by one
 
     for line in lines:
         # Skip line if it's a table header
@@ -38,8 +39,8 @@ def shortdesc_add():
 
         # Set up for this page, from current line
         values = line.split('\t')
-        title = values[0].strip()
-        description = values[1].strip()  # This is the new description we want to use
+        title = values[1].strip()
+        description = values[2].strip()  # This is the new description we want to use
         page = pywikibot.Page(wikipedia, title)
 
         # Get existing description and type: manual or embedded
@@ -175,7 +176,7 @@ def shortdesc_add():
     dt_extension = f'{now:%Y-%m-%d (%H %M)}.tsv'
     name_start = 'log_success '
     if username == 'MichaelMaggs':
-        name_start = 'log_success MNM '
+        name_start = 'log_success MNM '  # Distinguish assisted (non-bot) edits with my username
     try:
         if esuccess_str:
             log_success_file = name_start + name_plural + ' ' + dt_extension
@@ -183,10 +184,10 @@ def shortdesc_add():
                 lsfile.write(esuccess_str)
             print('Successes logged in ' + log_success_file)
         if efailure_str:
-            log_failure_file = 'log_failure ' + name_plural + ' ' + dt_extension
-            with open(log_failure_file, 'w') as lffile:
+            log_fail_file = 'log_fail ' + name_plural + ' ' + dt_extension
+            with open(log_fail_file, 'w') as lffile:
                 lffile.write(efailure_str)
-            print('Failures logged in ' + log_failure_file)
+            print('Failures logged in ' + log_fail_file)
     except:
         print(f'\nSTOPPING: Unable to create or write to logging files')
         return

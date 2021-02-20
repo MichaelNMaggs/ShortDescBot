@@ -3,7 +3,8 @@
 from pywikibot import pagegenerators
 
 from sd_functions import *
-from sd_generator import *
+from sd_generator import shortdesc_generator
+from sd_get_lead import get_lead
 
 
 # Main function for 'stage' mode
@@ -14,16 +15,16 @@ def shortdesc_stage():
     tripped = False
 
     # Set up pages as iterable, from cat or from Petscan file. Each item in pages must be created as a Pywikibot object
-    if petscan_tf:  # Import a file of Petscan results
+    if use_basefile:  # Import a file of Petscan results
         pages = []
-        with open(petscan_file) as f:
+        with open(base_file) as f:
             data = f.read()
             todo = data.splitlines()
         for line in todo:
             values = line.split('\t')
             if values[0] == 'number':  # Ignore any header line
                 continue
-            title = values[1]  # Title field
+            title = values[1]  # Column 0 is a sequence number
             page = pywikibot.Page(wikipedia, title)
             pages.append(page)
 
@@ -43,7 +44,7 @@ def shortdesc_stage():
                 continue
 
         if verbose_stage:
-            print('\nCHECKING PAGE IN SHORTDESC_STAGE - ', page.title())
+            print('\nCHECKING PAGE  - ', page.title())
 
         # Do we want this page? Check against page definition
         result_page, skip_text = check_page(page)
@@ -60,8 +61,8 @@ def shortdesc_stage():
         if lead_text is None:
             print(str(count_arts) + ': ' + page.title() + ' - FAILED: Lead could not be extracted')
             errortext = 'Lead could not be extracted'
-            failure_str += page.title() + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + '[None]' + '\n'
             count_failure += 1
+            failure_str += str(count_failure) + '\t' + page.title() + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + '[None]' + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
@@ -73,8 +74,8 @@ def shortdesc_stage():
         # If the page fails, write a new line to failure_str, for staging later
         if not result_criteria:
             print(str(count_arts) + ': ' + page.title() + ' - FAILED: ' + errortext)
-            failure_str += page.title() + '\t' + errortext + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             count_failure += 1
+            failure_str += str(count_failure) + '\t' + page.title() + '\t' + errortext + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
@@ -84,8 +85,8 @@ def shortdesc_stage():
         #  If no usable short description, treat as a page failure and write to failure_st
         if not result_gen:
             print(str(count_arts) + ': ' + page.title() + ' - FAILED: ' + result_gen_txt)
-            failure_str += page.title() + '\t' + result_gen_txt + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             count_failure += 1
+            failure_str += str(count_failure) + '\t' + page.title() + '\t' + result_gen_txt + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
@@ -96,7 +97,7 @@ def shortdesc_stage():
         print(str(count_arts) + ': ' + page.title() + f' - STAGING NEW SD {count_success}: ' + description)
 
         # Build up success_str string ready to save to local file
-        success_str += page.title() + '\t' + description + '\t' + wikidata_sd + '\t' + lead_text + '\n'
+        success_str += str(count_success) + '\t' + page.title() + '\t' + description + '\t' + wikidata_sd + '\t' + lead_text + '\n'
         #  If needed, also build up success_examples_str string ready to write to userspace
         if write_wp_examples and count_success_examples <= max_examples:
             count_success_examples += 1
@@ -111,16 +112,17 @@ def shortdesc_stage():
             if at_endpoint:
                 break
 
-    # Finished creating the strings. Now stage the successes to success_file
-    try:
-        with open(success_file, 'w') as f1:
-            f1.write(success_str)
-    except:
-        print(f'\nSTOPPING: Unable to open {success_file}')
-        return
+    # Finished creating the strings. Now stage the successes to staged
+    if success_str:
+        try:
+            with open(staged, 'w') as f1:
+                f1.write(success_str)
+        except:
+            print(f'\nSTOPPING: Unable to open {staged}')
+            return
 
     # Write examples to my userspace, if requested
-    if write_wp_examples:
+    if write_wp_examples and success_examples_str:
         try:
             page = pywikibot.Page(wikipedia, wp_examples_page)
             header_text = "\n|+\nShortDescBot proposed short descriptions\n!Article\n!Proposed SD\n!(Wikidata " \
@@ -131,19 +133,20 @@ def shortdesc_stage():
         except:
             print(f'\nWARNING: Unable to write examples to {wp_examples_page}')
 
-    #  Write the failures to failure_file
-    try:
-        with open(failure_file, 'w') as f2:
-            f2.write(failure_str)
-    except:
-        print(f'\nSTOPPING: Unable to open {failure_file}')
-        return
+    #  Write the failures to staged_fail
+    if failure_str:
+        try:
+            with open(staged_fail, 'w') as f2:
+                f2.write(failure_str)
+        except:
+            print(f'\nSTOPPING: Unable to open {staged_fail}')
+            return
 
     try:
         targets = count_failure + count_success
         succ_pc = round(100 * count_success / targets, 2)
         fail_pc = round(100 * count_failure / targets, 2)
-        print(f'\nThe draft short descriptions are staged in {success_file}, with failures in {failure_file}')
+        print(f'\nThe draft short descriptions are staged in {staged}, with failures in {staged_fail}')
         if write_wp_examples:
             print('Examples are at https://en.wikipedia.org/wiki/' + wp_examples_page.replace(' ', '_'))
         print(f'\nTARGETS: {targets}  SUCCESS: {count_success} ({succ_pc}%)  FAILURE: {count_failure} ({fail_pc}%)')

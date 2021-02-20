@@ -5,7 +5,7 @@ import re
 import pywikibot
 from pywikibot.data import api
 
-article = 'Crossing of the Rhine'
+article = 'Athyma cama'
 wikipedia = pywikibot.Site('en', 'wikipedia')
 page = pywikibot.Page(wikipedia, article)
 
@@ -89,6 +89,8 @@ def get_lead(page):
     # Deal with redirected wikilinks: replace [xxx|yyy] with [yyy]
     lead = re.sub(r"\[([^\]\[|]*)\|", "[", lead, re.MULTILINE)
 
+
+#  ***********  REFS TO DO  *************
     # Remove any references: < ... > (can't deal with raw HTML tags such as <small> ... </small>)
     lead = re.sub(r"<.*?>", "", lead, re.MULTILINE)
 

@@ -9,7 +9,7 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
         print(title + ' -   NO EDIT MADE: Page does not exist')
         return False
     if not page.text:
-        print(title + ' - NO EDIT MADE: Page has been blanked')
+        print(title + ' - NO EDIT MADE: Page has been blanked or a blank page has been served')
         return False
     if not allow_bots(page.text, username):
         print(title + ' - NO EDIT MADE: Bot is excluded via the Bots template')

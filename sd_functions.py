@@ -3,10 +3,12 @@
 import mwparserfromhell
 from pywikibot.data import api
 
-from sd_generator import *
 
 
-# FUNCTIONS
+from sd_config import *
+
+
+# UTILITY FUNCTIONS
 
 # Check to see if page matches the criteria. Returns (True, '') or (False, reason)
 def check_criteria(page, lead_text):
@@ -143,57 +145,6 @@ def clean_text(textstr):
     return textstr
 
 
-# Get the first 150 chars of the lead
-def get_lead(page):
-    sections = pywikibot.textlib.extract_sections(page.text, wikipedia)
-    lead = sections[0]
-
-    # Remove any templates: {{ ... }}
-    # First, replace template double braces with single so that we can use find_parens
-    lead = lead.replace("{{", "{")
-    lead = lead.replace("}}", "}")
-    try:
-        result = find_parens(lead, '{', '}')  # Get start and end indexes for all templates
-    except IndexError:
-        return ''
-    # Go through templates and replace with ` strings of same length, to avoid changing index positions
-    for key in result:
-        start = key
-        end = result[key]
-        length = end - start + 1
-        lead = lead.replace(lead[start:end + 1], "`" * length)
-
-    # Remove any images: [[File: ... ]] or [[Image: ... ]]
-    # Replace double square brackets with single so that we can use find_parens
-    lead = lead.replace("[[", "[")
-    lead = lead.replace("]]", "]")
-    try:
-        result = find_parens(lead, '[', ']')  # Get start and end indexes for all square brackets
-    except IndexError:
-        return ''
-    # Go through results and replace wikicode representing images with ` strings of same length
-    for key in result:
-        start = key
-        end = result[key]
-        strstart = lead[start + 1:start + 7]
-        if 'File:' in strstart or 'Image:' in strstart:
-            length = end - start + 1
-            lead = lead.replace(lead[start:end + 1], "`" * length)
-
-    # Deal with redirected wikilinks: replace [xxx|yyy] with [yyy]
-    lead = re.sub(r"\[([^\]\[|]*)\|", "[", lead, re.MULTILINE)
-
-    # Remove any references: <ref ... /ref> (can't deal with raw HTML such as <small> ... </small>)
-    lead = re.sub(r"<.*?>", "", lead, re.MULTILINE)
-
-    # Delete the temporary ` strings and clean up
-    lead = clean_text(lead)
-    # Reduce length to 150, and chop out everything after the last full stop, if there is one
-    lead = lead[:150].strip()
-
-    return lead
-
-
 # Count the number of infoboxes
 def count_infoboxes(page):
     count = 0
@@ -265,4 +216,32 @@ def confirm_edit(tit, ex_desc, ex_type, desc):
 
     print('ERROR in confirm_edit')
     return 'n'
+
+
+# Check whether text_frag occurs anywhere within the name of a non-hidden page category
+def in_category(page, text_frag):
+    try:
+        catlist = [cat.title() for cat in page.categories() if 'hidden' not in cat.categoryinfo]
+        for cat in catlist:
+            if text_frag in cat:
+                return True
+    except:
+        return False
+    return False
+
+
+# Get text within s between the first occurrence of start and the subsequent first occurrence of end
+def find_between(s, start, end):
+    return (s.split(start))[1].split(end)[0].strip()
+
+
+def shortdesc_end(best_rank, name_singular, name_plural):
+    if best_rank in ['Species', 'Subspecies']:
+        return name_singular
+    else:
+        return name_plural
+
+
+
+
 

@@ -1,75 +1,84 @@
 # See sd_run.py for status and copyright release information
 
-from sd_config import *
+from statistics import multimode
+
+from sd_adjust_desc import adjust_desc
+from sd_functions import *
+from sd_rank_from import rank_from_category, rank_from_lead, rank_from_speciesbox, \
+    rank_from_taxobox, info_from_autobox
 
 
 # Generate the draft SD. Called by shortdesc_stage. Returns (True, description) for good result, or (False, errortext)
-# NOTE: For each task, the code here needs to be hand-crafted
+# NOTE: For each bot task, the code here needs to be hand-crafted
 def shortdesc_generator(page, lead_text):
-    title = page.title()
-    matched_type = ''
-    extinct_list_page = ['isafossil', 'isanextinct', '{{extinct}}', '|status=ex', '|extinct=y', '|extinct=t',
-                         '|type_species=†', 'extinctions]]', '[[category:prehistoric']
-    regex_code = "(is a |are a |is an |are an |was a |were a |was an |were an )(?:(?! in the ).){,30}"
-    # Need to ensure eg that "is an order of fungi in the class Tremellomycetes" maps to 'Order' not Class'
-    # So, regex covers:  "is a" + ... maximum of 30 chars not including 'in the' ... + "order"
-    # Tempered greedy token - see http://www.rexegg.com/regex-quantifiers.html#tempered_greed
-    sdtype_dict = {
-        'Genus': regex_code + 'genus',
-        'Family': regex_code + 'famil',
-        'Superfamily': regex_code + 'superfamil',
-        'Tribe': regex_code + 'tribe',
-        'Subtribe': regex_code + 'subtribe',
-        'Subfamily': regex_code + 'subfamil',
-        'Subgenus': regex_code + 'subgenus',
-        'Class': regex_code + 'class',
-        'Order': regex_code + 'order'
-    }
-
-    # Get title length, ignoring brackets; make compressed searchable version of page text
-    title_nobra = re.sub(r'\(.+?\)', '', title).strip()
-    title_nobra_len = len(title_nobra.split())
+    #  Make compressed searchable version of page text
     text_compressed = page.text.lower().replace(' ', '')
 
-    # Check if this is a species article
-    if title_nobra_len > 1 and ('{speciesbox' in text_compressed or "|species='''''" in text_compressed):
-        matched_type = 'Species'
-        shortdesc = matched_type + ' of ' + name_singular
+    # Get title, ignoring brackets
+    title = page.title()
+    title_nobra = re.sub(r'\(.+?\)', '', title).strip()
+    single_word_title = True if len(title_nobra.split()) == 1 else False
 
-    # Check if this is a subspecies article
-    elif title_nobra_len > 1 and ('{subspeciesbox' in text_compressed or "|subspecies='''''" in text_compressed):
-        matched_type = 'Subspecies'
-        shortdesc = matched_type + ' of ' + name_singular
+    rank_category = rank_from_category(page)
+    rank_lead = rank_from_lead(lead_text)
+    rank_speciesbox = rank_from_speciesbox(text_compressed)
+    rank_taxobox = rank_from_taxobox(title_nobra, text_compressed)
+    rank_autobox, isextinct_autobox = info_from_autobox(wikipedia, text_compressed)
+    all_ranks = [rank_category, rank_lead, rank_speciesbox, rank_taxobox, rank_autobox]
 
-    else:  # Not species or subspecies
-        if title_nobra_len > 1:
-            return False, "Multi-word title, but possibly not a species or subspecies"
-        matched = False
+    # Get the most common rank from the list (excluding None)
+    all_ranks_xnone = [x for x in all_ranks if x is not None]
+    best_ranks = multimode(all_ranks_xnone)  # List of most common ranks (eg a list of 2 if there is a tie)
+    best_rank = ''
+    if len(best_ranks) == 1:
+        best_rank = best_ranks[0]  # The single best rank, if there is one
 
-        for sdtype in sdtype_dict:  # Work through the other options. Accept only if exactly one rank matches
-            sdregex = sdtype_dict[sdtype]
-            if re.search(sdregex, lead_text):
-                if matched:
-                    return False, "Multiple descriptions possible"
-                # print("FOUND MATCH on", sdtype)
-                matched_type = sdtype
-                matched = True
+    if verbose_stage:
+        print('rank_category, rank_lead, rank_speciesbox, rank_taxobox, rank_autobox')
+        print(all_ranks)
+        print(all_ranks_xnone)
+        print('best_ranks: ', best_ranks, 'Best rank: ', best_rank)
 
-        # Final chance to save an unmatched Genus article that doesn't mention 'genus' but is in a genera category
-        if not matched:
-            if "|genus='''''" in text_compressed:
-                matched_type = 'Genus'
-                print('Last chance genus')
-            else:  # No good
-                return False, "Can't create description"
+    # Return straight away if there is a single best rank
+    if best_rank:
+        shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
+        return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
-        shortdesc = matched_type + ' of ' + name_plural
+    # Return if nothing at all works
+    diff_ranks = list(set(all_ranks_xnone))
+    if len(diff_ranks) == 0:
+        return False, 'Not a relevant page'
 
-    # Adjust SD if extinct
-    for extinct in extinct_list_page:  # Parse entire page
-        if extinct.lower() in text_compressed and len('Extinct ' + shortdesc) <= 40:
-            shortdesc = 'Extinct ' + shortdesc.lower()
-            return True, shortdesc
+    # At this point we have found several conflicting ranks for this page
 
-    return True, shortdesc
+    # Exceptions for Genus/Species: single-word titles classified as species are normally monotypic genus articles
+    # Single-word titles are very rarely species
+    if 'Genus' in diff_ranks and 'Species' in diff_ranks:
+        if not single_word_title:
+            shortdesc = 'Species' + ' of ' + name_singular
+        if single_word_title:
+            shortdesc = 'Genus' + ' of ' + name_plural
+        return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
+    # Prefer subspecies to species
+    if 'Subspecies' in diff_ranks and 'Species' in diff_ranks:
+        shortdesc = 'Subspecies' + ' of ' + name_singular
+        return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
+
+    # Drop inconsistent_autotaxobox rank, and check if there is a new best one. Then return with that
+    if rank_autobox is not None:
+        best_ranks.remove(rank_autobox)
+        print('rank_autobox: ', rank_autobox)
+        print('Best ranks2: ', best_ranks)
+        if len(best_ranks) == 1:
+            best_rank = best_ranks[0]  # The single best rank, if there is one
+            shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
+            if verbose_stage:
+                print('Best_ranks excl autobox: ', best_ranks, 'New best rank: ', best_rank)
+            return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
+
+    # Failed: return with some useful error text
+    if rank_autobox is not None:
+        return False, f'Autotaxobox reports {rank_autobox}'
+
+    return False, 'UNMATCHED'
