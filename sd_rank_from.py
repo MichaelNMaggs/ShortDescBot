@@ -12,6 +12,7 @@ def rank_from_category(page):
         'genera': 'Genus',
         'subfamilies': 'Subfamily',
         'families': 'Family',
+        'superfamilies': 'Superfamily',
     }
 
     rank = None
@@ -24,15 +25,17 @@ def rank_from_category(page):
         rank = 'Subgenus'
     if rank == 'Family' and in_category(page, 'subfamilies'):
         rank = 'Subfamily'
+    if rank == 'Family' and in_category(page, 'superfamilies'):
+        rank = 'Superfamily'
 
     return rank
 
 # Get rank from lead
 def rank_from_lead(lead_text):
     # Need to ensure eg that "is an order of fungi in the class Tremellomycetes" maps to 'Order' not Class'
-    # So, regex covers:  "is a" + ... maximum of 30 chars not including 'in the' ... + "order"
+    # So, regex covers:  "is a", "is an" etc + ... maximum of 30 chars not including 'in the' ... + "order"
     # Tempered greedy token - see http://www.rexegg.com/regex-quantifiers.html#tempered_greed
-    regex_code = "(is a |are a |is an |are an |was a |were a |was an |were an )(?:(?! in the ).){,30}"
+    regex_code = "(is\sa|are\sa|was\sa|were\sa)(?:(?!\sin\sthe).){0,50}\s"
     match_lead_dict = {  # Partial strings to ensure unique matches
         'Subgenus': regex_code + 'subgenu',
         'Genus': regex_code + 'genus',
@@ -55,10 +58,10 @@ def rank_from_lead(lead_text):
     rank = None
     matched = False
     for key, val in match_lead_dict.items():
-        if re.search(val, lead_text):
+        if re.search(val, lead_text.split('.')[0]):   # For this search only, just consider the first sentence
+            # print("FOUND LEAD MATCH on", key)
             if matched:
                 return None
-            # print("FOUND MATCH on", sdtype)
             rank = key
             matched = True
 
