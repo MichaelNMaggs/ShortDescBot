@@ -65,7 +65,7 @@ def shortdesc_generator(page, lead_text):
         shortdesc = 'Subspecies' + ' of ' + name_singular
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
-    # Drop inconsistent_autotaxobox rank, and check if there is a new best one. Then return with that
+    # Drop inconsistent_automatictaxobox rank, and check if there is a new best one. Then return with that
     if rank_autobox is not None:
         best_ranks.remove(rank_autobox)
         if len(best_ranks) == 1:
