@@ -51,7 +51,6 @@ def get_lead(page):
 
     # Delete the temporary ` strings and clean up
     lead = clean_text(lead)
-    # Reduce length to 150 chars
     lead = lead[:150].strip()
 
     return lead

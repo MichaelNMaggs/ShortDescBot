@@ -105,7 +105,7 @@ def rank_from_taxobox(title_nobra, text_compressed):
     rank = None
 
     for key, val in match_taxobox_dict.items():
-        to_match = f"|{key}='''''{title_nobra}'''''"
+        to_match = f"|{key}='''''{title_nobra}'''''"  # Not species, as first part of binomial is usually abbreviated
         if to_match in text_compressed:
             rank = val
 
@@ -154,26 +154,19 @@ def info_from_autobox(wikipedia, text_compressed):
 
     if '{{automatictaxobox' not in text_compressed:
         return None, False
-    rank = None
 
+    isextinct = False
     try:
         taxon = find_between(text_compressed, 'taxon=', r'|')
-        # print('Taxon: ', taxon)
         taxo_template = f'Template:Taxonomy/{taxon.capitalize()}'
-        # print(taxo_template)
         taxo_page = pywikibot.Page(wikipedia, taxo_template)
-        taxo_text_compressed = taxo_page.text.lower().replace(' ', '')
-        taxo_rank = find_between(taxo_text_compressed, 'rank=', r'|')
+        taxo_txt_comp = taxo_page.text.lower().replace(' ', '')
+        taxo_rank = find_between(taxo_txt_comp, 'rank=', r'|')
         rank = match_auto_dict[taxo_rank]
-        # print('Rank: ', rank)
+        if '|extinct=yes' in taxo_txt_comp or '|extinct=true' in taxo_txt_comp:
+            isextinct = True
+        return rank, isextinct
     except:
-        rank = None  # Return None if any exception, or if rank is not listed in auto_dict
-    try:
-        extinct = find_between(taxo_text_compressed, 'extinct=', r'|')
-        isextinct = 'yes' in extinct or 'true' in extinct
-        # print('Extinct: ', isextinct)
-    except:
-        isextinct = False  # Return False if any exception or if nothing is listed
+        return None, False
 
-    return rank, isextinct
 

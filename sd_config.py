@@ -10,13 +10,13 @@ import pywikibot
 # 'stage': write to staging file (and optionally examples to userspace)
 # 'edit':  read from staging file and write live edits to namespace
 #  Note: When writing live edits, the SDs are taken from the staging file, and are not re-calculated anew
-mode_flag = 'edit'
+mode_flag = 'stage'
 
 #  STAGING CONFIGURATION
 
 # Base text for SDs
-name_singular = 'archaeon'
-name_plural = 'archaea'
+name_singular = 'fly'
+name_plural = 'flies'
 
 # Maximum number of articles to process, not including articles that are skipped
 max_arts = 0  # Set to 0 for no limit
@@ -34,6 +34,7 @@ recurse_cats = True   # Be careful with this!
 # This can be a Petscan tsv output file, or a recycled and manually-corrected staged_fail file
 use_basefile = True
 base_file = f'base_file {name_plural}.tsv'
+
 
 # Define the pages that that we intend to stage. Others will be skipped without comment
 require_infobox = False
@@ -54,7 +55,7 @@ title_regex = re.compile(r'', re.IGNORECASE)
 # Staging output
 verbose_stage = True
 stage_to_file = True  # Stage to file?
-max_stage = 0  # Set to 0 for no limit
+max_stage = 20  # Set to 0 for no limit
 staged = f'staged {name_plural}.tsv'   # < This is the output file for staging AND the input file for editing
 staged_fail = f'staged_fail {name_plural}.tsv'
 write_wp_examples = False  # Write some examples to my wp userspace, for community review
