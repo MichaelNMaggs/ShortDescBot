@@ -53,9 +53,9 @@ title_regex_tf = False  # Check for this regex in the page title
 title_regex = re.compile(r'', re.IGNORECASE)
 
 # Staging output
-verbose_stage = True
+verbose_stage = False
 stage_to_file = True  # Stage to file?
-max_stage = 20  # Set to 0 for no limit
+max_stage = 0  # Set to 0 for no limit
 staged = f'staged {name_plural}.tsv'   # < This is the output file for staging AND the input file for editing
 staged_fail = f'staged_fail {name_plural}.tsv'
 write_wp_examples = False  # Write some examples to my wp userspace, for community review

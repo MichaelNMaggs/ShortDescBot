@@ -68,13 +68,12 @@ def shortdesc_generator(page, lead_text):
     # Drop inconsistent_autotaxobox rank, and check if there is a new best one. Then return with that
     if rank_autobox is not None:
         best_ranks.remove(rank_autobox)
-        print('rank_autobox: ', rank_autobox)
-        print('Best ranks2: ', best_ranks)
         if len(best_ranks) == 1:
             best_rank = best_ranks[0]  # The single best rank, if there is one
             shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
             if verbose_stage:
-                print('Best_ranks excl autobox: ', best_ranks, 'New best rank: ', best_rank)
+                print(f'Overriding automatictaxobox rank: ', rank_autobox)
+                print('New best_ranks: ', best_ranks, 'New best_rank: ', best_rank)
             return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
     # Failed: return with some useful error text
