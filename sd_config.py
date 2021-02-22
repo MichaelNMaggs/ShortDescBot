@@ -15,8 +15,8 @@ mode_flag = 'stage'
 #  STAGING CONFIGURATION
 
 # Base text for SDs
-name_singular = 'beetle'
-name_plural = 'beetles'
+name_singular = 'sea spider'
+name_plural = 'sea spiders'
 name_singular = name_singular.lower()
 name_plural = name_plural.lower()
 

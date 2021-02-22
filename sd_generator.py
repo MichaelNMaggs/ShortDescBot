@@ -39,7 +39,7 @@ def shortdesc_generator(page, lead_text):
         print(all_ranks_xnone)
         print('best_ranks: ', best_ranks, 'Best rank: ', best_rank)
 
-    # If there is a single best rank return straight away, unless unexpected single_word_title
+    # If there is a single best rank return straight away, unless unexpected single- or multi- word title
     if best_rank:
         shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
         if single_word_title and best_rank in ('Species', 'Subspecies'):
