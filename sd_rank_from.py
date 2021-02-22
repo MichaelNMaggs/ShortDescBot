@@ -34,7 +34,7 @@ def rank_from_category(page):
 def rank_from_lead(lead_text):
     # Need to ensure eg that "is an order of fungi in the class Tremellomycetes" maps to 'Order' not Class'
     # So, regex covers:  "is a", "is an" etc + ... maximum of 30 chars not including 'in the' ... + "order"
-    # Tempered greedy token - see http://www.rexegg.com/regex-quantifiers.html#tempered_greed
+    # Tempered greedy token - http://www.rexegg.com/regex-quantifiers.html#tempered_greed
     regex_code = "(is\sa|are\sa|was\sa|were\sa)(?:(?!\sin\sthe).){0,50}\s"
     match_lead_dict = {  # Partial strings to ensure unique matches
         'Subgenus': regex_code + 'subgenu',
@@ -102,30 +102,66 @@ def rank_from_taxobox(title_nobra, text_compressed):
 
     if '{{taxobox' not in text_compressed:
         return None
-    rank = None
 
+    rank = None
+    # Check whether the exact title_nobra is shown in bold. If so, that defines the rank (apart from species/subspecies)
     for key, val in match_taxobox_dict.items():
-        to_match = f"|{key}='''''{title_nobra}'''''"  # Not species, as first part of binomial is usually abbreviated
+        to_match = f"|{key}='''''{title_nobra}'''''"  # No match if first part of a binomial is abbreviated
+        if to_match in text_compressed:
+            print ("RETURNING 1")
+            return val
+
+    # Check what else is in bold
+    for key, val in match_taxobox_dict.items():
+        to_match = f"|{key}='''''"   # No match if first part of a binomial is abbreviated
         if to_match in text_compressed:
             rank = val
 
-    if r"|binomial=''" in text_compressed:
-        rank = 'Species'
-
     # Exceptions for multiple matches
-    if rank == 'Genus' and f"|'subgenus='''''{title_nobra}'''''" in text_compressed:
+    if rank == 'Genus' and r"|'subgenus='''''" in text_compressed:
         rank = 'Subgenus'
-    if rank == 'Family' and f"|'subfamilia='''''{title_nobra}'''''" in text_compressed:
+        print("RETURNING 2")
+        return rank
+    if rank == 'Family' and r"|'subfamilia='''''" in text_compressed:
         rank = 'Subfamily'
-    if rank == 'Tribe' and f"|'subtribus='''''{title_nobra}'''''" in text_compressed:
+        print("RETURNING 3")
+        return rank
+    if rank == 'Tribe' and r"|'subtribus='''''" in text_compressed:
         rank = 'Subtribe'
-    if rank == 'Species' and f"|'subspecies='''''{title_nobra}'''''" in text_compressed:
+        print("RETURNING 4")
+        return rank
+    if rank == 'Species' and r"|'subspecies='''''" in text_compressed:
         rank = 'Subspecies'
-    if rank == 'Class' and f"|'subclassis='''''{title_nobra}'''''" in text_compressed:
+        print("RETURNING 5")
+        return rank
+    if rank == 'Class' and r"|'subclassis='''''" in text_compressed:
         rank = 'Subclass'
-    if rank == 'Order' and f"|'subordo='''''{title_nobra}'''''" in text_compressed:
+        print("RETURNING 6")
+        return rank
+    if rank == 'Order' and r"|'subordo='''''" in text_compressed:
         rank = 'Suborder'
+        print("RETURNING 7")
+        return rank
 
+    # Species/genus oddities
+    # Accept species if genus is not in bold
+    if "|genus='''''" not in text_compressed:
+        species_strs = ["|species='''''", "|binomial=''"]    # (only two quote marks for binomial)
+        if any(x in text_compressed for x in species_strs):
+            rank = "Species"
+            if r"|'subspecies='''''" in text_compressed:
+                rank = 'Subspecies'
+            print("RETURNING 8")
+            return rank
+    # If both genus and species both in bold, probably a monotypic genus
+    if "|genus='''''" in text_compressed:
+        species_strs = ["|species='''''", "|binomial=''"]    # (only two quote marks for binomial)
+        if any(x in text_compressed for x in species_strs):
+            rank = "Genus"
+            print("RETURNING 9")
+            return rank
+
+    print("RETURNING 10")
     return rank
 
 # Rank and extinct status from autotaxobox
@@ -170,3 +206,30 @@ def info_from_autobox(wikipedia, text_compressed):
         return None, False
 
 
+# ********** NOT YET IN USE ***************
+
+# Does lead_text match possible_rank (ignoring other possibilities)?
+def check_rank_from_lead(lead_text, possible_rank):
+    regex_code = "(is\sa|are\sa|was\sa|were\sa)(?:(?!\sin\sthe).){0,50}\s"
+    match_lead_dict = {
+        'Subgenus': regex_code + 'subgenu',
+        'Genus': regex_code + 'genus',
+        'Superfamily': regex_code + 'superfami',
+        'Family': regex_code + 'famil',
+        'Subfamily': regex_code + 'subfami',
+        'Tribe': regex_code + 'tribe',
+        'Subtribe': regex_code + 'subtrib',
+        'Class': regex_code + 'class',
+        'Subclass': regex_code + 'subclas',
+        'Order': regex_code + 'order',
+        'Suborder': regex_code + 'suborde',
+        'Clade': regex_code + 'clade',
+        'Variety': regex_code + 'variet',
+        'Species': regex_code + 'species',
+        'Informal group': regex_code + 'informal group',
+    }
+    # Searching only the first sentence of the lead
+    if re.search(match_lead_dict[possible_rank], lead_text.split('.')[0]):
+        return True
+
+    return False

@@ -15,8 +15,10 @@ mode_flag = 'stage'
 #  STAGING CONFIGURATION
 
 # Base text for SDs
-name_singular = 'fly'
-name_plural = 'flies'
+name_singular = 'beetle'
+name_plural = 'beetles'
+name_singular = name_singular.lower()
+name_plural = name_plural.lower()
 
 # Maximum number of articles to process, not including articles that are skipped
 max_arts = 0  # Set to 0 for no limit
@@ -35,7 +37,6 @@ recurse_cats = True   # Be careful with this!
 use_basefile = True
 base_file = f'base_file {name_plural}.tsv'
 
-
 # Define the pages that that we intend to stage. Others will be skipped without comment
 require_infobox = False
 infobox_strings = ['Speciesbox', 'Taxobox']  # Covers Automatic Taxobox and Subspeciesbox (case insensitive)
@@ -53,7 +54,7 @@ title_regex_tf = False  # Check for this regex in the page title
 title_regex = re.compile(r'', re.IGNORECASE)
 
 # Staging output
-verbose_stage = False
+verbose_stage = True
 stage_to_file = True  # Stage to file?
 max_stage = 0  # Set to 0 for no limit
 staged = f'staged {name_plural}.tsv'   # < This is the output file for staging AND the input file for editing

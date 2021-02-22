@@ -39,17 +39,21 @@ def shortdesc_generator(page, lead_text):
         print(all_ranks_xnone)
         print('best_ranks: ', best_ranks, 'Best rank: ', best_rank)
 
-    # Return straight away if there is a single best rank
+    # If there is a single best rank return straight away, unless unexpected single_word_title
     if best_rank:
         shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
+        if single_word_title and best_rank in ('Species', 'Subspecies'):
+            return False, f'Unexpected rank "{best_rank}" for single-word title'
+        if not single_word_title and best_rank not in ('Species', 'Subspecies'):
+            return False, f'Unexpected rank "{best_rank}" for multi-word title'
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
     # Return if nothing at all works
     diff_ranks = list(set(all_ranks_xnone))
-    if len(diff_ranks) == 0:
-        return False, 'Not a relevant page'
+    if not diff_ranks:
+        return False, "Not a relevant article"
 
-    # At this point we have found several conflicting ranks for this page
+    # At this point we have several conflicting ranks for this page
 
     # Exceptions for Genus/Species: single-word titles classified as species are normally monotypic genus articles
     # Single-word titles are very rarely species
@@ -80,4 +84,4 @@ def shortdesc_generator(page, lead_text):
     if rank_autobox is not None:
         return False, f'Autotaxobox reports {rank_autobox}'
 
-    return False, 'UNMATCHED'
+    return False, "Unmatched"

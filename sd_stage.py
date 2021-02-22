@@ -59,15 +59,15 @@ def shortdesc_stage():
 
         # If we have not been able to extract a lead, write a new line to failure_str, for staging later
         if lead_text is None:
-            print(str(count_arts) + ': ' + page.title() + ' - FAILED: Lead could not be extracted')
-            errortext = 'Lead could not be extracted'
+            print(str(count_arts) + ': ' + page.title() + ' - FAILED: Could not extract lead')
+            errortext = 'Could not extract lead'
             count_failure += 1
             failure_str += str(count_failure) + '\t' + page.title() + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + '[None]' + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
 
-        # We have a page to work with. Check against the criteria and get Wikidata SD
+        # We have a page to work with. Check against the criteria and get Wikidata SD (for reference only)
         result_criteria, errortext = check_criteria(page, lead_text)
         wikidata_sd = get_wikidata_desc(page)
 
@@ -146,11 +146,11 @@ def shortdesc_stage():
         targets = count_failure + count_success
         succ_pc = round(100 * count_success / targets, 2)
         fail_pc = round(100 * count_failure / targets, 2)
-        print(f'\nThe draft short descriptions are staged in {staged}, with failures in {staged_fail}')
+        print(f'\nDrafts are staged in {staged}, with failures in {staged_fail}')
         if write_wp_examples:
             print('Examples are at https://en.wikipedia.org/wiki/' + wp_examples_page.replace(' ', '_'))
         print(f'\nTARGETS: {targets}  SUCCESS: {count_success} ({succ_pc}%)  FAILURE: {count_failure} ({fail_pc}%)')
     except:
-        print('\nNo target articles found.')
+        print('\nNo target articles found')
     return
 
