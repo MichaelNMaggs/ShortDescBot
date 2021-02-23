@@ -1,5 +1,6 @@
 # See sd_run.py for status and copyright release information
 
+import time, datetime
 from pywikibot import pagegenerators
 
 from sd_functions import *
@@ -112,13 +113,16 @@ def shortdesc_stage():
             if at_endpoint:
                 break
 
-    # Finished creating the strings. Now stage the successes to staged
+    # Finished creating the strings. Now stage the successes to staged_date
     if success_str:
         try:
-            with open(staged, 'w') as f1:
+            now = datetime.datetime.now()
+            dt_extension = f'{now:%Y-%m-%d (%H %M)}'
+            staged_date = staged + ' ' + dt_extension
+            with open(staged_date, 'w') as f1:
                 f1.write(success_str)
         except:
-            print(f'\nSTOPPING: Unable to open {staged}')
+            print(f'\nSTOPPING: Unable to open {staged_date}')
             return
 
     # Write examples to my userspace, if requested
@@ -133,13 +137,16 @@ def shortdesc_stage():
         except:
             print(f'\nWARNING: Unable to write examples to {wp_examples_page}')
 
-    #  Write the failures to staged_fail
+    #  Write the failures to staged_fail_date
     if failure_str:
+        now = datetime.datetime.now()
+        dt_extension = f'{now:%Y-%m-%d (%H %M)}'
+        staged_fail__date = staged_fail + ' ' + dt_extension
         try:
-            with open(staged_fail, 'w') as f2:
+            with open(staged_fail__date, 'w') as f2:
                 f2.write(failure_str)
         except:
-            print(f'\nSTOPPING: Unable to open {staged_fail}')
+            print(f'\nSTOPPING: Unable to open {staged_fail__date}')
             return
 
     try:

@@ -173,7 +173,7 @@ def shortdesc_add():
     # Now write to one-off logging files
     print('\n')
     now = datetime.datetime.now()
-    dt_extension = f'{now:%Y-%m-%d (%H %M)}.tsv'
+    dt_extension = f'{now:%Y-%m-%d (%H %M)}'
     name_start = 'log_success '
     if username == 'MichaelMaggs':
         name_start = 'log_success MNM '  # Distinguish assisted (non-bot) edits with my username
