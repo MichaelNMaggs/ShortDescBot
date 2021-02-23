@@ -173,18 +173,18 @@ def shortdesc_add():
     # Now write to one-off logging files
     print('\n')
     now = datetime.datetime.now()
-    dt_extension = f'{now:%Y-%m-%d (%H %M)}'
+    dt_extension = f'{now:%Y-%m-%d (%H %M).tsv}'
     name_start = 'log_success '
     if username == 'MichaelMaggs':
-        name_start = 'log_success MNM '  # Distinguish assisted (non-bot) edits with my username
+        name_start = 'MNM non-bot log_success '  # Distinguish assisted (non-bot) edits with my username
     try:
         if esuccess_str:
-            log_success_file = name_start + name_plural + ' ' + dt_extension
+            log_success_file = name_start + name_plural + f' ({ecount_success}) {dt_extension}'
             with open(log_success_file, 'w') as lsfile:
                 lsfile.write(esuccess_str)
             print('Successes logged in ' + log_success_file)
         if efailure_str:
-            log_fail_file = 'log_fail ' + name_plural + ' ' + dt_extension
+            log_fail_file = 'log_fail ' + name_plural + f' ({ecount_failure}) {dt_extension}'
             with open(log_fail_file, 'w') as lffile:
                 lffile.write(efailure_str)
             print('Failures logged in ' + log_fail_file)

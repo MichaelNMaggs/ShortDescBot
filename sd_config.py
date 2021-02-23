@@ -15,8 +15,8 @@ mode_flag = 'edit'
 #  STAGING CONFIGURATION
 
 # Base text for SDs
-name_singular = 'ribbon worm'
-name_plural = 'ribbon worms'
+name_singular = 'beetle'
+name_plural = 'beetles'
 name_singular = name_singular.lower()
 name_plural = name_plural.lower()
 
