@@ -108,7 +108,7 @@ def rank_from_taxobox(title_nobra, text_compressed):
     for key, val in match_taxobox_dict.items():
         to_match = f"|{key}='''''{title_nobra}'''''"  # No match if first part of a binomial is abbreviated
         if to_match in text_compressed:
-            print ("RETURNING 1")
+            #print ("RETURNING 1")
             return val
 
     # Check what else is in bold
@@ -120,27 +120,27 @@ def rank_from_taxobox(title_nobra, text_compressed):
     # Exceptions for multiple matches
     if rank == 'Genus' and r"|'subgenus='''''" in text_compressed:
         rank = 'Subgenus'
-        print("RETURNING 2")
+        #print("RETURNING 2")
         return rank
     if rank == 'Family' and r"|'subfamilia='''''" in text_compressed:
         rank = 'Subfamily'
-        print("RETURNING 3")
+        #print("RETURNING 3")
         return rank
     if rank == 'Tribe' and r"|'subtribus='''''" in text_compressed:
         rank = 'Subtribe'
-        print("RETURNING 4")
+        #print("RETURNING 4")
         return rank
     if rank == 'Species' and r"|'subspecies='''''" in text_compressed:
         rank = 'Subspecies'
-        print("RETURNING 5")
+        #print("RETURNING 5")
         return rank
     if rank == 'Class' and r"|'subclassis='''''" in text_compressed:
         rank = 'Subclass'
-        print("RETURNING 6")
+        #print("RETURNING 6")
         return rank
     if rank == 'Order' and r"|'subordo='''''" in text_compressed:
         rank = 'Suborder'
-        print("RETURNING 7")
+        #print("RETURNING 7")
         return rank
 
     # Species/genus oddities
@@ -151,17 +151,17 @@ def rank_from_taxobox(title_nobra, text_compressed):
             rank = "Species"
             if r"|'subspecies='''''" in text_compressed:
                 rank = 'Subspecies'
-            print("RETURNING 8")
+            #print("RETURNING 8")
             return rank
     # If both genus and species both in bold, probably a monotypic genus
     if "|genus='''''" in text_compressed:
         species_strs = ["|species='''''", "|binomial=''"]    # (only two quote marks for binomial)
         if any(x in text_compressed for x in species_strs):
             rank = "Genus"
-            print("RETURNING 9")
+            #print("RETURNING 9")
             return rank
 
-    print("RETURNING 10")
+    #print("RETURNING 10")
     return rank
 
 # Rank and extinct status from autotaxobox
