@@ -118,7 +118,7 @@ def shortdesc_stage():
         try:
             now = datetime.datetime.now()
             dt_extension = f'{now:%Y-%m-%d (%H %M)}'
-            staged_date = staged + ' ' + dt_extension
+            staged_date = staged.split('.')[0] + ' ' + dt_extension + '.tsv'
             with open(staged_date, 'w') as f1:
                 f1.write(success_str)
         except:
@@ -141,7 +141,7 @@ def shortdesc_stage():
     if failure_str:
         now = datetime.datetime.now()
         dt_extension = f'{now:%Y-%m-%d (%H %M)}'
-        staged_fail__date = staged_fail + ' ' + dt_extension
+        staged_fail__date = staged_fail.split('.')[0] + ' ' + dt_extension + '.tsv'
         try:
             with open(staged_fail__date, 'w') as f2:
                 f2.write(failure_str)
