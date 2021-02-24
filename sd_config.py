@@ -14,9 +14,10 @@ mode_flag = 'stage'
 
 #  STAGING CONFIGURATION
 
+verbose_stage = True
 # Base text for SDs
-name_singular = 'fly'
-name_plural = 'flies'
+name_singular = 'beetle'
+name_plural = 'beetles'
 name_singular = name_singular.lower()
 name_plural = name_plural.lower()
 
@@ -54,7 +55,6 @@ title_regex_tf = False  # Check for this regex in the page title
 title_regex = re.compile(r'', re.IGNORECASE)
 
 # Staging output
-verbose_stage = False
 stage_to_file = True  # Stage to file?
 max_stage = 0  # Set to 0 for no limit
 staged = f'staged {name_plural}.tsv'  # < This is also the input file for editing (date is added for staged output)

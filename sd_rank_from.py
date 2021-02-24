@@ -88,17 +88,16 @@ def rank_from_lead(lead_txt):
     # Pre-filter with tight regex 1 to extract any obvious initial match before attempting anything cleverer
 
     for key, val in lead_dict1.items():
-        #print('INITIAL ', key, val)
         if re.search(val, lead_txt):
             rank = key
-            print('Regex1 lead rank is ', rank)
+            #print('Regex1 lead rank is ', rank)
             return rank
 
     # Work through the possibilities with looser regex 2. Return if exactly one rank matches, otherwise None
     matched = False
     for key, val in lead_dict2.items():
         if re.search(val, lead_txt):
-            print("A regex2 lead match on", key)
+            #print("A regex2 lead match on", key)
             if matched:
                 return None
             rank = key

@@ -69,6 +69,13 @@ def shortdesc_generator(page, lead_text):
         shortdesc = 'Subspecies' + ' of ' + name_singular
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
+    # Accept Species if a two-word title and at least one other possibility matches
+    if 'Species' in diff_ranks and len(title_nobra.split()) == 2:
+        if verbose_stage:
+            print('Two-word title and at least one match to Species')
+        shortdesc = 'Species' + ' of ' + name_singular
+        return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
+
     # Drop inconsistent_automatictaxobox rank, and check if there is a new best one. Then return with that
     if rank_autobox is not None:
         best_ranks.remove(rank_autobox)
