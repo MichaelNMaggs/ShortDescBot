@@ -10,13 +10,13 @@ import pywikibot
 # 'stage': write to staging file (and optionally examples to userspace)
 # 'edit':  read from staging file and write live edits to namespace
 #  Note: When writing live edits, the SDs are taken from the staging file, and are not re-calculated anew
-mode_flag = 'edit'
+mode_flag = 'stage'
 
 #  STAGING CONFIGURATION
 
 # Base text for SDs
-name_singular = 'beetle'
-name_plural = 'beetles'
+name_singular = 'fly'
+name_plural = 'flies'
 name_singular = name_singular.lower()
 name_plural = name_plural.lower()
 

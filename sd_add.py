@@ -180,13 +180,13 @@ def shortdesc_add():
     try:
         if esuccess_str:
             log_success_file = name_start + name_plural + f' ({ecount_success}) {dt_extension}'
-            with open(log_success_file, 'w') as lsfile:
-                lsfile.write(esuccess_str)
+            with open(log_success_file, 'w') as ls_file:
+                ls_file.write(esuccess_str)
             print('Successes logged in ' + log_success_file)
         if efailure_str:
             log_fail_file = 'log_fail ' + name_plural + f' ({ecount_failure}) {dt_extension}'
-            with open(log_fail_file, 'w') as lffile:
-                lffile.write(efailure_str)
+            with open(log_fail_file, 'w') as lf_file:
+                lf_file.write(efailure_str)
             print('Failures logged in ' + log_fail_file)
     except:
         print(f'\nSTOPPING: Unable to create or write to logging files')
