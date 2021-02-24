@@ -34,7 +34,7 @@ def rank_from_category(page):
 
 
 # Get rank from lead
-def rank_from_lead(lead_txt):
+def rank_from_lead(lead_txt, name_singular):
     # Tight regex, just to catch obvious leads such as "is a <rank> ..."
     regex_code1 = "(is\sa|are\sa|was\sa|were\sa)\s"
     # Looser regex covering "is a", "is an" etc + ... maximum of 30 chars not including 'in the' ... + "order"
@@ -86,7 +86,6 @@ def rank_from_lead(lead_txt):
         lead_txt = lead_sen
 
     # Pre-filter with tight regex 1 to extract any obvious initial match before attempting anything cleverer
-
     for key, val in lead_dict1.items():
         if re.search(val, lead_txt):
             rank = key
@@ -102,6 +101,12 @@ def rank_from_lead(lead_txt):
                 return None
             rank = key
             matched = True
+
+    # If nothing else, most probably Species if lead has eg " ... is a beetle ..."
+    regex3 = f"(is\sa|was\sa)\s{name_singular}"
+    if re.search(regex3, lead_txt):
+        # print("A regex2 lead match on", key)
+        return 'Species'
 
     return rank
 
