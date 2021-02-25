@@ -3,8 +3,6 @@
 import mwparserfromhell
 from pywikibot.data import api
 
-
-
 from sd_config import *
 
 
@@ -240,8 +238,3 @@ def shortdesc_end(best_rank, name_singular, name_plural):
         return name_singular
     else:
         return name_plural
-
-
-
-
-

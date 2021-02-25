@@ -1,11 +1,11 @@
 # See sd_run.py for status and copyright release information
 
 
-import time, datetime
+import datetime
+import time
 
 from sd_edit_allowed import ok_to_edit
 from sd_functions import *
-import sd_config
 
 
 # Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local staged
@@ -203,4 +203,3 @@ def shortdesc_add():
         print('\nNo edit target articles found.')
 
     return
-

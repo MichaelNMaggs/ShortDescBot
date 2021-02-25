@@ -1,6 +1,7 @@
 # See sd_run.py for status and copyright release information
 
-import time, datetime
+import datetime
+
 from pywikibot import pagegenerators
 
 from sd_functions import *
@@ -63,7 +64,8 @@ def shortdesc_stage():
             print(str(count_arts) + ': ' + page.title() + ' - FAILED: Could not extract lead')
             errortext = 'Could not extract lead'
             count_failure += 1
-            failure_str += str(count_failure) + '\t' + page.title() + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + '[None]' + '\n'
+            failure_str += str(
+                count_failure) + '\t' + page.title() + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + '[None]' + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
@@ -76,7 +78,8 @@ def shortdesc_stage():
         if not result_criteria:
             print(str(count_arts) + ': ' + page.title() + ' - FAILED: ' + errortext)
             count_failure += 1
-            failure_str += str(count_failure) + '\t' + page.title() + '\t' + errortext + '\t' + wikidata_sd + '\t' + lead_text + '\n'
+            failure_str += str(
+                count_failure) + '\t' + page.title() + '\t' + errortext + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
@@ -87,7 +90,9 @@ def shortdesc_stage():
         if not result_gen:
             print(str(count_arts) + ': ' + page.title() + ' - FAILED: ' + result_gen_txt)
             count_failure += 1
-            failure_str += str(count_failure) + '\t' + page.title() + '\t' + result_gen_txt + '\t' + wikidata_sd + '\t' + lead_text + '\n'
+            failure_str += str(
+                count_failure) + '\t' + page.title() + '\t' + result_gen_txt + '\t' + wikidata_sd + '\t' + lead_text \
+                           + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
@@ -98,7 +103,8 @@ def shortdesc_stage():
         print(str(count_arts) + ': ' + page.title() + f' - STAGING NEW SD {count_success}: ' + description)
 
         # Build up success_str string ready to save to local file
-        success_str += str(count_success) + '\t' + page.title() + '\t' + description + '\t' + wikidata_sd + '\t' + lead_text + '\n'
+        success_str += str(
+            count_success) + '\t' + page.title() + '\t' + description + '\t' + wikidata_sd + '\t' + lead_text + '\n'
         #  If needed, also build up success_examples_str string ready to write to userspace
         if write_wp_examples and count_success_examples <= max_examples:
             count_success_examples += 1
@@ -160,4 +166,3 @@ def shortdesc_stage():
     except:
         print('\nNo target articles found')
     return
-
