@@ -20,7 +20,7 @@ def shortdesc_generator(page, lead_text):
     single_word_title = True if len(title_nobra.split()) == 1 else False
 
     rank_category = rank_from_category(page)
-    rank_lead = rank_from_lead(lead_text, name_singular)
+    rank_lead = rank_from_lead(title_nobra, lead_text, name_singular, verbose_stage)
     rank_speciesbox = rank_from_speciesbox(text_compressed)
     rank_taxobox = rank_from_taxobox(title_nobra, text_compressed)
     rank_autobox, isextinct_autobox = info_from_autobox(wikipedia, text_compressed)

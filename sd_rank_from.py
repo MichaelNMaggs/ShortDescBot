@@ -34,79 +34,92 @@ def rank_from_category(page):
 
 
 # Get rank from lead
-def rank_from_lead(lead_txt, name_singular):
-    # Tight regex, just to catch obvious leads such as "is a <rank> ..."
-    regex_code1 = "(is\sa|are\sa|was\sa|were\sa)\s"
-    # Looser regex covering "is a", "is an" etc + ... maximum of 30 chars not including 'in the' ... + "order"
-    # Need to ensure eg that "is an order of fungi in the class Tremellomycetes" maps to 'Order' not Class'
+def rank_from_lead(title_nobra, lead_txt, name_singular, verbose_stage):
+    regex_start1 = "(is\sa|is\san|was\sa|was\san)\s"  # eg "is a genus ..."
+    # Regex2 covers eg "is a" + <maximum of 30 chars not including 'in the'> + "genus"
+    # Need to ensure that "is an order of fungi in the class Tremellomycetes" maps to 'Order' not Class'
     # Tempered greedy token - http://www.rexegg.com/regex-quantifiers.html#tempered_greed
-    regex_code2 = "(is\sa|are\sa|was\sa|were\sa)(?:(?!\sin\sthe).){0,50}\s"  # Looser
+    regex_start2 = "(is\sa|are\sa|was\sa|were\sa)(?:(?!\sin\sthe).){0,50}\s"
 
     lead_dict1 = {  # Partial strings to ensure unique matches
-        'Subgenus': regex_code1 + 'subgenu',
-        'Genus': regex_code1 + 'genus',
-        'Superfamily': regex_code1 + 'superfami',
-        'Family': regex_code1 + 'famil',
-        'Subfamily': regex_code1 + 'subfami',
-        'Tribe': regex_code1 + 'tribe',
-        'Subtribe': regex_code1 + 'subtrib',
-        'Class': regex_code1 + 'class',
-        'Subclass': regex_code1 + 'subclas',
-        'Order': regex_code1 + 'order',
-        'Suborder': regex_code1 + 'suborde',
-        'Infraorder': regex_code1 + 'infraorde',
-        'Clade': regex_code1 + 'clade',
-        'Variety': regex_code1 + 'variet',
-        'Species': regex_code1 + 'species',
-        'Informal group': regex_code1 + 'informal group',
+        'Subgenus': regex_start1 + 'subgenu',
+        'Genus': regex_start1 + 'genus',
+        'Superfamily': regex_start1 + 'superfami',
+        'Family': regex_start1 + 'famil',
+        'Subfamily': regex_start1 + 'subfami',
+        'Tribe': regex_start1 + 'tribe',
+        'Subtribe': regex_start1 + 'subtrib',
+        'Class': regex_start1 + 'class',
+        'Subclass': regex_start1 + 'subclas',
+        'Order': regex_start1 + 'order',
+        'Suborder': regex_start1 + 'suborde',
+        'Infraorder': regex_start1 + 'infraorde',
+        'Clade': regex_start1 + 'clade',
+        'Variety': regex_start1 + 'variet',
+        'Species': regex_start1 + 'species',
+        'Informal group': regex_start1 + 'informal group',
+        'Phylum': regex_start1 + 'phylum',
+        'Subphylum': regex_start1 + 'subphylu',
     }
     lead_dict2 = {  # Partial strings to ensure unique matches
-        'Subgenus': regex_code2 + 'subgenu',
-        'Genus': regex_code2 + 'genus',
-        'Superfamily': regex_code2 + 'superfami',
-        'Family': regex_code2 + 'famil',
-        'Subfamily': regex_code2 + 'subfami',
-        'Tribe': regex_code2 + 'tribe',
-        'Subtribe': regex_code2 + 'subtrib',
-        'Class': regex_code2 + 'class',
-        'Subclass': regex_code2 + 'subclas',
-        'Order': regex_code2 + 'order',
-        'Suborder': regex_code2 + 'suborde',
-        'Infraorder': regex_code1 + 'infraorde',
-        'Clade': regex_code2 + 'clade',
-        'Variety': regex_code2 + 'variet',
-        'Species': regex_code2 + 'species',
-        'Informal group': regex_code2 + 'informal group',
+        'Subgenus': regex_start2 + 'subgenu',
+        'Genus': regex_start2 + 'genus',
+        'Superfamily': regex_start2 + 'superfami',
+        'Family': regex_start2 + 'famil',
+        'Subfamily': regex_start2 + 'subfami',
+        'Tribe': regex_start2 + 'tribe',
+        'Subtribe': regex_start2 + 'subtrib',
+        'Class': regex_start2 + 'class',
+        'Subclass': regex_start2 + 'subclas',
+        'Order': regex_start2 + 'order',
+        'Suborder': regex_start2 + 'suborde',
+        'Infraorder': regex_start1 + 'infraorde',
+        'Clade': regex_start2 + 'clade',
+        'Variety': regex_start2 + 'variet',
+        'Species': regex_start2 + 'species',
+        'Informal group': regex_start2 + 'informal group',
+        'Phylum': regex_start1 + 'phylum',
+        'Subphylum': regex_start1 + 'subphylu',
     }
-
     rank = None
+
     # For this function only, just consider the first sentence
     lead_sen = lead_txt.split('.')[0]
     if len(lead_sen) > 26:  # Don't do this if first sentence is unreasonably short
         lead_txt = lead_sen
 
-    # Pre-filter with tight regex 1 to extract any obvious initial match before attempting anything cleverer
+    # Pre-filter with tight regex of lead_dict1 to extract any obvious match before attempting anything clever
     for key, val in lead_dict1.items():
-        if re.search(val, lead_txt):
+        if re.search(val, lead_txt):  # eg "is a genus ..."
             rank = key
-            #print('Regex1 lead rank is ', rank)
+            if verbose_stage:
+                print('lead_dict1 lead rank is ', rank)
             return rank
 
-    # Work through the possibilities with looser regex 2. Return if exactly one rank matches, otherwise None
+    # Must be Species if lead has eg "Abacetus alesi is a beetle ..."
+    regex_sp1 = f"{title_nobra}\s(is\sa|is\san|was\sa|was\san)\s{name_singular}"
+    if re.search(regex_sp1, lead_txt):
+        if verbose_stage:
+            print('regex_sp1 lead match on Species')
+        return 'Species'
+
+    # Most probably Species if lead has eg " ... is a beetle ..."
+    regex_sp2 = f"(is\sa|is\san|was\sa|was\san)\s{name_singular}"
+    if re.search(regex_sp2, lead_txt):
+        if verbose_stage:
+            print('regex_sp2 lead match on Species')
+        return 'Species'
+
+    # Work through the options with looser regex of lead_dict2. Return if exactly one rank matches, otherwise None
     matched = False
     for key, val in lead_dict2.items():
         if re.search(val, lead_txt):
-            #print("A regex2 lead match on", key)
+            if verbose_stage:
+                print('lead_dict2 lead matches on ', key)
             if matched:
                 return None
             rank = key
             matched = True
-
-    # If nothing else, most probably Species if lead has eg " ... is a beetle ..."
-    regex3 = f"(is\sa|was\sa)\s{name_singular}"
-    if re.search(regex3, lead_txt):
-        # print("A regex2 lead match on", key)
-        return 'Species'
 
     return rank
 

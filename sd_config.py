@@ -14,10 +14,10 @@ mode_flag = 'stage'
 
 #  STAGING CONFIGURATION
 
-verbose_stage = True
+verbose_stage = False
 # Base text for SDs
-name_singular = 'beetle'
-name_plural = 'beetles'
+name_singular = 'bacterium'
+name_plural = 'bacteria'
 name_singular = name_singular.lower()
 name_plural = name_plural.lower()
 
