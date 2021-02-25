@@ -15,6 +15,7 @@ def rank_from_category(page):
         'subfamilies': 'Subfamily',
         'families': 'Family',
         'superfamilies': 'Superfamily',
+        'orders': 'Order',
     }
 
     rank = None
@@ -154,6 +155,8 @@ def rank_from_taxobox(title_nobra, text_compressed):
         'localgroup': 'Group',
         'clade': 'Clade',
         'cladus': 'Clade',
+        'phylum':  'Phylum',
+        'subphylum': 'Subphylum',
     }
 
     if '{{taxobox' not in text_compressed:
@@ -243,6 +246,8 @@ def info_from_autobox(wikipedia, text_compressed):
         'localgroup': 'Group',
         'clade': 'Clade',
         'cladus': 'Clade',
+        'phylum': 'Phylum',
+        'subphylum': 'Subphylum',
     }
 
     if '{{automatictaxobox' not in text_compressed:
@@ -284,6 +289,8 @@ def check_rank_from_lead(lead_text, possible_rank):
         'Variety': regex_code + 'variet',
         'Species': regex_code + 'species',
         'Informal group': regex_code + 'informal group',
+        'Phylum': regex_code + 'phylum',
+        'Subphylum': regex_code + 'subphylu',
     }
     # Searching only the first sentence of the lead
     if re.search(match_lead_dict[possible_rank], lead_text.split('.')[0]):
