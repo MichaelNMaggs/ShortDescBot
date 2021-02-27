@@ -24,7 +24,7 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
         print(title + ' - NO EDIT MADE: Page now has an embedded description')
         return False
     if description == 'Not a relevant article':
-        print(title + ' - NO EDIT MADE: Description is "Not a relevant article"')
+        print(title + ' - NO EDIT MADE: Description starts with "*"')
         return False
     if title != page.title():      # Unexpected error
         print(title + f' - ERROR: page.title is "{page.title()}", but title from file is "{title}"')

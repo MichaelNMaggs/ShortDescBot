@@ -10,16 +10,14 @@ import pywikibot
 # 'stage': write to staging file (and optionally examples to userspace)
 # 'edit':  read from staging file and write live edits to namespace
 #  Note: When writing live edits, the SDs are taken from the staging file, and are not re-calculated anew
-mode_flag = 'stage'
+mode_flag = 'edit'
 
 #  STAGING CONFIGURATION
 
-verbose_stage = False
 # Base text for SDs
-name_singular = 'bacterium'
-name_plural = 'bacteria'
-name_singular = name_singular.lower()
-name_plural = name_plural.lower()
+name_singular = 'woodlouse'
+name_plural = 'woodlice'
+verbose_stage = False
 
 # Maximum number of articles to process, not including articles that are skipped
 max_arts = 0  # Set to 0 for no limit
@@ -32,7 +30,7 @@ endpoint = ''
 # NOTE: Make sure this covers only the required subcategories, as some may have little relevance to the top level cat
 # (1) Read from WP Category. Does this unless use_basefile = True
 targetcat = ''
-recurse_cats = True   # Be careful with this!
+recurse_cats = True  # Be careful with this!
 # (2) Or, read from use_basefile, in tsv format
 # This can be a Petscan tsv output file, or a recycled and manually-corrected staged_fail file
 use_basefile = True
@@ -57,7 +55,7 @@ title_regex = re.compile(r'', re.IGNORECASE)
 # Staging output
 stage_to_file = True  # Stage to file?
 max_stage = 0  # Set to 0 for no limit
-staged = f'staged {name_plural}.tsv'  # < This is also the input file for editing (date is added for staged output)
+staging_file = f'staged {name_plural}.tsv'  # (date is added for staging_file output)
 staged_fail = f'staged_fail {name_plural}.tsv'
 write_wp_examples = False  # Write some examples to my wp userspace, for community review
 wp_examples_page = 'User:MichaelMaggs/ShortDesc'

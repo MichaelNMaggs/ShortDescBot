@@ -124,7 +124,7 @@ def shortdesc_stage():
         try:
             now = datetime.datetime.now()
             dt_extension = f'{now:%Y-%m-%d (%H %M)}'
-            staged_date = staged.split('.')[0] + ' ' + dt_extension + '.tsv'
+            staged_date = staging_file.split('.')[0] + ' ' + dt_extension + '.tsv'
             with open(staged_date, 'w') as f1:
                 f1.write(success_str)
         except:
@@ -159,7 +159,7 @@ def shortdesc_stage():
         targets = count_failure + count_success
         succ_pc = round(100 * count_success / targets, 2)
         fail_pc = round(100 * count_failure / targets, 2)
-        print(f'\nDrafts are staged in {staged}, with failures in {staged_fail}')
+        print(f'\nDrafts are staged in {staging_file}, with failures in {staged_fail}')
         if write_wp_examples:
             print('Examples are at https://en.wikipedia.org/wiki/' + wp_examples_page.replace(' ', '_'))
         print(f'\nTARGETS: {targets}  SUCCESS: {count_success} ({succ_pc}%)  FAILURE: {count_failure} ({fail_pc}%)')

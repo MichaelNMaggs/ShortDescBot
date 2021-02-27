@@ -10,7 +10,7 @@ def adjust_desc(page, lead_text, shortdesc, isextinct_autobox):
     if len('Extinct ' + shortdesc) > 40:
         return shortdesc
 
-    # Don't bother to do any more checks if we already have the answer from an Automatictaxobox
+    # Don't bother with more checks if we already have the answer from an Automatictaxobox
     if isextinct_autobox:
         return 'Extinct ' + shortdesc.lower()
 

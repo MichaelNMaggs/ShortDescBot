@@ -8,7 +8,7 @@ from sd_edit_allowed import ok_to_edit
 from sd_functions import *
 
 
-# Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local staged
+# Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local staging_file
 def shortdesc_add():
     ecount = ecount_success = ecount_failure = 0
     esuccess_str = efailure_str = ''
@@ -21,16 +21,16 @@ def shortdesc_add():
         print(f'STOPPING - cannot run bot in automatic mode with Username:{username}')
         return
 
-    # Get the list of articles and the new short descriptions from local staged
+    # Get the list of articles and the new short descriptions from local staging_file
     try:
-        with open(staged) as sfile:
+        with open('staged.tsv') as sfile:
             data = sfile.read()
             lines = data.splitlines()
     except:
         print("STOPPING - can't open staging file")
         return
 
-    # Work through lines of staged, one by one
+    # Work through lines of staging_file, one by one
 
     for line in lines:
         # Skip line if it's a table header

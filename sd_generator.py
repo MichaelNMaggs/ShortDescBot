@@ -43,15 +43,15 @@ def shortdesc_generator(page, lead_text):
     if best_rank:
         shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
         if single_word_title and best_rank in ('Species', 'Subspecies'):
-            return False, f'Unexpected rank "{best_rank}" for single-word title'
+            return False, f'*** Unexpected rank "{best_rank}" for single-word title'
         if not single_word_title and best_rank not in ('Species', 'Subspecies'):
-            return False, f'Unexpected rank "{best_rank}" for multi-word title'
+            return False, f'*** Unexpected rank "{best_rank}" for multi-word title'
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
     # Return if nothing at all works
     diff_ranks = list(set(all_ranks_xnone))
     if not diff_ranks:
-        return False, "Not a relevant article"
+        return False, "*** Not a relevant article"
 
     # At this point we have several conflicting ranks for this page
 
@@ -89,6 +89,6 @@ def shortdesc_generator(page, lead_text):
 
     # Failed: return with some useful error text
     if rank_autobox is not None:
-        return False, f'Autotaxobox reports {rank_autobox}'
+        return False, f'*** Autotaxobox reports {rank_autobox}'
 
-    return False, "Unmatched"
+    return False, "*** Unmatched"

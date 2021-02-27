@@ -16,6 +16,7 @@ def rank_from_category(page):
         'families': 'Family',
         'superfamilies': 'Superfamily',
         'orders': 'Order',
+        'phyla': 'Phylum',
     }
 
     rank = None
@@ -268,9 +269,9 @@ def info_from_autobox(wikipedia, text_compressed):
         return None, False
 
 
-# ********** NOT YET IN USE ***************
+# ********** NOT IN USE ***************
 
-# Does lead_text match possible_rank (ignoring other possibilities)?
+# Does lead_text match possible_rank?  (ignoring other possibilities)
 def check_rank_from_lead(lead_text, possible_rank):
     regex_code = "(is\sa|are\sa|was\sa|were\sa)(?:(?!\sin\sthe).){0,50}\s"
     match_lead_dict = {
