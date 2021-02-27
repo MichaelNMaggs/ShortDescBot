@@ -10,13 +10,13 @@ import pywikibot
 # 'stage': write to staging file (and optionally examples to userspace)
 # 'edit':  read from staging file and write live edits to namespace
 #  Note: When writing live edits, the SDs are taken from the staging file, and are not re-calculated anew
-mode_flag = 'edit'
+mode_flag = 'stage'
 
 #  STAGING CONFIGURATION
 
 # Base text for SDs
-name_singular = 'woodlouse'
-name_plural = 'woodlice'
+name_singular = 'thorny-headed worm'
+name_plural = 'thorny-headed worms'
 verbose_stage = False
 
 # Maximum number of articles to process, not including articles that are skipped

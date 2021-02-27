@@ -179,12 +179,12 @@ def shortdesc_add():
         name_start = 'MNM non-bot log_success '  # Distinguish assisted (non-bot) edits with my username
     try:
         if esuccess_str:
-            log_success_file = name_start + name_plural + f' ({ecount_success}) {dt_extension}'
+            log_success_file = name_start +  f'({ecount_success}) {dt_extension}'
             with open(log_success_file, 'w') as ls_file:
                 ls_file.write(esuccess_str)
             print('Successes logged in ' + log_success_file)
         if efailure_str:
-            log_fail_file = 'log_fail ' + name_plural + f' ({ecount_failure}) {dt_extension}'
+            log_fail_file = 'log_fail ' + f'({ecount_failure}) {dt_extension}'
             with open(log_fail_file, 'w') as lf_file:
                 lf_file.write(efailure_str)
             print('Failures logged in ' + log_fail_file)
