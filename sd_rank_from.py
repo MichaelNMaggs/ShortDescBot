@@ -16,6 +16,7 @@ def rank_from_category(page):
         'families': 'Family',
         'superfamilies': 'Superfamily',
         'orders': 'Order',
+        'suborders': 'Suborder',
         'phyla': 'Phylum',
     }
 
@@ -31,6 +32,8 @@ def rank_from_category(page):
         rank = 'Subfamily'
     if rank == 'Family' and in_category(page, 'superfamilies'):
         rank = 'Superfamily'
+    if rank == 'Order' and in_category(page, 'suborder'):
+        rank = 'Suborder'
 
     return rank
 
