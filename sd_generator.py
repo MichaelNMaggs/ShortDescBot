@@ -6,6 +6,7 @@ from sd_adjust_desc import adjust_desc
 from sd_functions import *
 from sd_rank_from import rank_from_category, rank_from_lead, rank_from_speciesbox, \
     rank_from_taxobox, info_from_autobox
+from sd_is_monotypic_genus import is_monotypic_genus
 
 
 # Generate the draft SD. Called by shortdesc_stage. Returns (True, description) for good result, or (False, errortext)
@@ -39,16 +40,26 @@ def shortdesc_generator(page, lead_text):
         print(all_ranks_xnone)
         print('best_ranks: ', best_ranks, 'Best rank: ', best_rank)
 
-    # If there is a single best rank return straight away, unless unexpected single- or multi- word title
+    # Deal with situation where a single best rank has been identified
     if best_rank:
-        shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
-        if single_word_title and best_rank in ('Species', 'Subspecies'):
-            return False, f'*** Unexpected rank "{best_rank}" for single-word title'
-        if not single_word_title and best_rank not in ('Species', 'Subspecies'):
-            return False, f'*** Unexpected rank "{best_rank}" for multi-word title'
+
+        if single_word_title:  # Species is unexpected if single-word title; but may be monotypic genus
+            if best_rank == 'Species' and is_monotypic_genus(text_compressed, lead_text):
+                best_rank = 'Genus'
+                shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
+                return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
+
+            if best_rank == 'Subspecies':  # Subspecies is unexpected if single-word title
+                return False, f'*** Unexpected rank "{best_rank}" for single-word title'
+
+        if not single_word_title:
+            if best_rank not in ('Species', 'Subspecies'):  # Genus or higher rank unexpected if multi-word title
+                return False, f'*** Unexpected rank "{best_rank}" for multi-word title'
+
+        shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)  # Best rank looks good
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
-    # Return if nothing at all works
+    # Return False if nothing at all works
     diff_ranks = list(set(all_ranks_xnone))
     if not diff_ranks:
         return False, "*** Not a relevant article"
