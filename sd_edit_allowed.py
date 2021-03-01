@@ -12,7 +12,7 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
         print(title + ' - NO EDIT MADE: Page now has an embedded description')
         return False
     if not page.exists():
-        print(title + ' -   NO EDIT MADE: Page does not exist')
+        print(title + ' - NO EDIT MADE: Page does not exist')
         return False
     if not page.text:
         print(title + ' - NO EDIT MADE: Page blanked or a blank page has been served')
@@ -21,7 +21,7 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
         print(title + f' - NO EDIT MADE: No change to "{description}"')
         return False
     if description == 'Not a relevant article':
-        print(title + ' - NO EDIT MADE: Description starts with "*"')
+        print(title + ' - NO EDIT MADE: Description starts with "*"')  # Indicates a page that previously failed staging
         return False
     if not allow_bots(page.text, username):
         print(title + ' - NO EDIT MADE: Bot is excluded via the Bots template')
