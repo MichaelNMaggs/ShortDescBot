@@ -5,26 +5,26 @@ from sd_functions import allow_bots
 
 # Check for various things before allowing a page edit
 def ok_to_edit(page, title, description, username, existing_desc, existing_type, override_manual, override_embedded):
-    if not page.exists():
-        print(title + ' -   NO EDIT MADE: Page does not exist')
-        return False
-    if not page.text:
-        print(title + ' - NO EDIT MADE: Page blanked or a blank page has been served')
-        return False
-    if not allow_bots(page.text, username):
-        print(title + ' - NO EDIT MADE: Bot is excluded via the Bots template')
-        return False
-    if description == existing_desc:
-        print(title + f' - NO EDIT MADE: No change to "{description}"')
-        return False
     if not override_manual and existing_type == 'manual':     # Don't edit if not allowed to change an existing desc
         print(title + ' - NO EDIT MADE: Page now has a manual description')
         return False
     if not override_embedded and existing_type == 'embedded':
         print(title + ' - NO EDIT MADE: Page now has an embedded description')
         return False
+    if not page.exists():
+        print(title + ' -   NO EDIT MADE: Page does not exist')
+        return False
+    if not page.text:
+        print(title + ' - NO EDIT MADE: Page blanked or a blank page has been served')
+        return False
+    if description == existing_desc:
+        print(title + f' - NO EDIT MADE: No change to "{description}"')
+        return False
     if description == 'Not a relevant article':
         print(title + ' - NO EDIT MADE: Description starts with "*"')
+        return False
+    if not allow_bots(page.text, username):
+        print(title + ' - NO EDIT MADE: Bot is excluded via the Bots template')
         return False
     if title != page.title():      # Unexpected error
         print(title + f' - ERROR: page.title is "{page.title()}", but title from file is "{title}"')
