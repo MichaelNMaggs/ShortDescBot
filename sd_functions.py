@@ -216,12 +216,12 @@ def confirm_edit(tit, ex_desc, ex_type, desc):
     return 'n'
 
 
-# Check whether text_frag occurs anywhere within the name of a non-hidden page category
+# Check whether text_frag occurs anywhere within the name of a non-hidden page category (case-insensitive)
 def in_category(page, text_frag):
     try:
         catlist = [cat.title() for cat in page.categories() if 'hidden' not in cat.categoryinfo]
         for cat in catlist:
-            if text_frag in cat:
+            if text_frag.lower() in cat.lower():
                 return True
     except:
         return False

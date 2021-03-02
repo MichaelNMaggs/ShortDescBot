@@ -15,7 +15,7 @@ def adjust_desc(page, lead_text, shortdesc, isextinct_autobox):
         return 'Extinct ' + shortdesc.lower()
 
     for extinct in extinct_in_lead:
-        if extinct in lead_text:
+        if extinct in lead_text.lower():
             return 'Extinct ' + shortdesc.lower()
     for extinct in extinct_in_cat:
         if in_category(page, extinct):
