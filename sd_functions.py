@@ -31,7 +31,6 @@ def check_criteria(page, lead_text):
                 break
         if none_found:
             return False, 'None of the some_words are present'
-
     if text_regex_tf:
         result = text_regex.match(lead_text)  # Returns object if a match, or None
         if result is None:
@@ -57,7 +56,7 @@ def check_page(page):
     if not override_embedded and existing_type == 'embedded':
         return False, 'Already has embedded short description'
     # Ignore redirects
-    if '#REDIRECT' in page.text:
+    if '#REDIRECT' in page.text.upper():
         return False, 'Is a redirect'
     # Check for required infobox(es)
     if require_infobox:

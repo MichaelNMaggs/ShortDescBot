@@ -11,7 +11,7 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
     if not override_embedded and existing_type == 'embedded':
         print(title + ' - NO EDIT MADE: Page now has an embedded description')
         return False
-    if '#REDIRECT' in page.text:
+    if '#REDIRECT' in page.text.upper():
         print(title + ' - NO EDIT MADE: Page has been converted to a redirect')
     if not page.exists():
         print(title + ' - NO EDIT MADE: Page does not exist')
