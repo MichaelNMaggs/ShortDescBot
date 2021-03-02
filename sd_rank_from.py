@@ -189,6 +189,9 @@ def rank_from_taxobox(title_nobra, text_compressed):
         rank = 'Subfamily'
         # print("RETURNING 3")
         return rank
+    if rank == 'Family' and r"|'superfamilia='''''" in text_compressed:
+        rank = 'Superfamily'
+        return rank
     if rank == 'Tribe' and r"|'subtribus='''''" in text_compressed:
         rank = 'Subtribe'
         # print("RETURNING 4")
