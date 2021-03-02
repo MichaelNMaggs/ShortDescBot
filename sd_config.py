@@ -15,8 +15,8 @@ mode_flag = 'stage'
 #  STAGING CONFIGURATION
 
 # Base text for SDs
-name_singular = 'sponge'
-name_plural = 'sponges'
+name_singular = 'hairyback'
+name_plural = 'hairybacks'
 verbose_stage = False
 
 # Maximum number of articles to process, not including articles that are skipped
