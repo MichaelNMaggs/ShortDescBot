@@ -13,6 +13,7 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
         return False
     if '#REDIRECT' in page.text.upper():
         print(title + ' - NO EDIT MADE: Page has been converted to a redirect')
+        return False
     if not page.exists():
         print(title + ' - NO EDIT MADE: Page does not exist')
         return False
