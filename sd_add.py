@@ -10,7 +10,7 @@ from sd_functions import *
 
 # Main function for 'edit' mode. Write the descriptions to mainspace, reading in from local staging_file
 def shortdesc_add():
-    ecount = ecount_success = ecount_failure = 0
+    ecount = ecount_success = ecount_failure = skip_count = 0
     esuccess_str = efailure_str = ''
 
     # Check login
@@ -50,7 +50,8 @@ def shortdesc_add():
         try:
             if not ok_to_edit(page, title, description, username, existing_desc, existing_type, override_manual,
                               override_embedded):
-                continue
+                skip_count += 1
+                continue   # Go on to next line, ie page to edit
         except AssertionError:
             return  # Unexpected error in page title
 
@@ -82,7 +83,7 @@ def shortdesc_add():
                 try:
                     page.save(edit_text + ' "' + description + '"', minor=False)
                 except:
-                    print(f'STILL UNABLE TO EDIT {title}. Skipping this page')
+                    print(f'STILL UNABLE TO EDIT {title}. Mark as failed')
                     # Build up efailure_str string ready to log to local file
                     efailure_str += title + '\t FAILED: ' + description + '\n'
                     ecount -= 1
@@ -113,7 +114,7 @@ def shortdesc_add():
                 try:
                     page.save(edit_text + ' "' + description + '"', minor=False)
                 except:
-                    print(f'STILL UNABLE TO EDIT {title}. Skipping this page')
+                    print(f'STILL UNABLE TO EDIT {title}. Mark as failed')
                     # Build up efailure_str string ready to log to local file
                     efailure_str += title + '\t FAILED: ' + description + '\n'
                     ecount -= 1
@@ -154,7 +155,7 @@ def shortdesc_add():
                 try:
                     page.save(edit_text + ' "' + description + '"', minor=False)
                 except:
-                    print(f'STILL UNABLE TO EDIT {title}. Skipping this page')
+                    print(f'STILL UNABLE TO EDIT {title}. Mark as failed')
                     # Build up efailure_str string ready to log to local file
                     efailure_str += title + '\t FAILED: ' + description + '\n'
                     ecount -= 1
@@ -170,7 +171,7 @@ def shortdesc_add():
 
         time.sleep(wait_time)
 
-    # Now write to one-off logging files
+    # Now write to one-off edit logging files
     print('\n')
     now = datetime.datetime.now()
     dt_extension = f'{now:%Y-%m-%d (%H %M).tsv}'
@@ -199,6 +200,7 @@ def shortdesc_add():
         print(
             f'EDIT TARGETS: {etargets}  SUCCESS: {ecount_success} ({esucc_pc}%)  FAILURE: {ecount_failure} ('
             f'{efail_pc}%)')
+        print(f'SKIPPED: {skip_count} articles')
     except:
         print('\nNo edit target articles found.')
 
