@@ -10,13 +10,13 @@ import pywikibot
 # 'stage': write to staging file (and optionally examples to userspace)
 # 'edit':  read from staging file and write live edits to namespace
 #  Note: When writing live edits, the SDs are taken from the staging file, and are not re-calculated anew
-mode_flag = 'stage'
+mode_flag = 'edit'
 
 #  STAGING CONFIGURATION
 
 # Base text for SDs
-name_singular = 'hairyback'
-name_plural = 'hairybacks'
+name_singular = 'fish'
+name_plural = 'fishes'
 verbose_stage = False
 
 # Maximum number of articles to process, not including articles that are skipped
@@ -27,14 +27,15 @@ startpoint = ''
 endpoint = ''
 
 # Staging input
-# NOTE: Make sure this covers only the required subcategories, as some may have little relevance to the top level cat
-# (1) Read from WP Category. Does this unless use_basefile = True
-targetcat = ''
-recurse_cats = True  # Be careful with this!
-# (2) Or, read from use_basefile, in tsv format
-# This can be a Petscan tsv output file, or a recycled and manually-corrected staged_fail file
+# (1) (Preferred) read from use_basefile: a Petscan tsv output file
+# NOTE: Make sure the search covers only the required subcats, as some may have little relevance to the top level cat
+# Can also be a recycled and manually-corrected staged_fail file
 use_basefile = True
 base_file = f'base_file {name_plural}.tsv'
+# (2) Or, read directly from a WP Category. Does this unless use_basefile = True
+targetcat = ''
+recurse_cats = True  # Be careful with this!
+
 
 # Define the pages that that we intend to stage. Others will be skipped without comment
 require_infobox = False
