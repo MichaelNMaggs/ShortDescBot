@@ -129,12 +129,22 @@ def rank_from_lead(title_nobra, lead_txt, name_singular, verbose_stage):
     return rank
 
 
-# Rank from speciesbox or subspeciesbox
+# Rank from various speciesboxes
 def rank_from_speciesbox(text_compressed):
     if '{{speciesbox' in text_compressed:
         return 'Species'
     if '{{subspeciesbox' in text_compressed:
         return 'Subspecies'
+    if '{{infraspeciesbox' in text_compressed:
+        var1 = re.search('\|varietas=\w', text_compressed)
+        var2 = re.search('\|variety=\w', text_compressed)
+        if var1 or var2:
+            return 'Variety'
+        subsp = re.search('\|subspecies=\w', text_compressed)
+        if subsp:
+            return 'Subspecies'
+
+    return None
 
 
 # Rank from general taxobox
@@ -142,10 +152,12 @@ def rank_from_taxobox(title_nobra, text_compressed):
     match_taxobox_dict = {
         'genus': 'Genus',
         'varietas': 'Variety',
+        'variety': 'Variety',
         'tribus': 'Tribe',
         'superfamilia': 'Superfamily',
         'subtribus': 'Subtribe',
         'subspecies': 'Subspecies',
+        'trinomial': 'Subspecies',
         'classis': 'Class',
         'subfamilia': 'Subfamily',
         'species': 'Species',
@@ -159,7 +171,7 @@ def rank_from_taxobox(title_nobra, text_compressed):
         'localgroup': 'Group',
         'clade': 'Clade',
         'cladus': 'Clade',
-        'phylum':  'Phylum',
+        'phylum': 'Phylum',
         'subphylum': 'Subphylum',
     }
 
@@ -167,14 +179,23 @@ def rank_from_taxobox(title_nobra, text_compressed):
         return None
 
     rank = None
-    # Check whether the exact title_nobra is shown in bold. If so, that defines the rank (apart from species/subspecies)
+    # Check whether the exact title_nobra is shown in bold italic.
+    # If so, that defines the rank (apart from species/subspecies/variety)
     for key, val in match_taxobox_dict.items():
         to_match = f"|{key}='''''{title_nobra}'''''"  # No match if first part of a binomial is abbreviated
         if to_match in text_compressed:
             # print ("RETURNING 1")
             return val
 
-    # Check what else is in bold
+    # Subspecies and variety. These are in italic only (not bold italic) so two quotation marks
+    if r"|'varietas=''" in text_compressed or r"|'variety=''" in text_compressed:
+        rank = 'Variety'
+        return rank
+    if r"|'subspecies=''" in text_compressed:
+        rank = 'Subspecies'
+        return rank
+
+    # Check what else is in bold italic
     for key, val in match_taxobox_dict.items():
         to_match = f"|{key}='''''"  # No match if first part of a binomial is abbreviated
         if to_match in text_compressed:
@@ -196,10 +217,6 @@ def rank_from_taxobox(title_nobra, text_compressed):
         rank = 'Subtribe'
         # print("RETURNING 4")
         return rank
-    if rank == 'Species' and r"|'subspecies='''''" in text_compressed:
-        rank = 'Subspecies'
-        # print("RETURNING 5")
-        return rank
     if rank == 'Class' and r"|'subclassis='''''" in text_compressed:
         rank = 'Subclass'
         # print("RETURNING 6")
@@ -215,8 +232,6 @@ def rank_from_taxobox(title_nobra, text_compressed):
         species_strs = ["|species='''''", "|binomial=''"]  # (only two quote marks for binomial)
         if any(x in text_compressed for x in species_strs):
             rank = "Species"
-            if r"|'subspecies='''''" in text_compressed:
-                rank = 'Subspecies'
             # print("RETURNING 8")
             return rank
     # If both genus and species both in bold, probably a monotypic genus
@@ -236,6 +251,7 @@ def info_from_autobox(wikipedia, text_compressed):
     match_auto_dict = {
         'genus': 'Genus',
         'varietas': 'Variety',
+        'variety': 'Variety',
         'tribus': 'Tribe',
         'superfamilia': 'Superfamily',
         'subtribus': 'Subtribe',
@@ -275,32 +291,3 @@ def info_from_autobox(wikipedia, text_compressed):
         return None, False
 
 
-# ********** NOT IN USE ***************
-
-# Does lead_text match possible_rank?  (ignoring other possibilities)
-def check_rank_from_lead(lead_text, possible_rank):
-    regex_code = "(is\sa|are\sa|was\sa|were\sa)(?:(?!\sin\sthe).){0,50}\s"
-    match_lead_dict = {
-        'Subgenus': regex_code + 'subgenu',
-        'Genus': regex_code + 'genus',
-        'Superfamily': regex_code + 'superfami',
-        'Family': regex_code + 'famil',
-        'Subfamily': regex_code + 'subfami',
-        'Tribe': regex_code + 'tribe',
-        'Subtribe': regex_code + 'subtrib',
-        'Class': regex_code + 'class',
-        'Subclass': regex_code + 'subclas',
-        'Order': regex_code + 'order',
-        'Suborder': regex_code + 'suborde',
-        'Clade': regex_code + 'clade',
-        'Variety': regex_code + 'variet',
-        'Species': regex_code + 'species',
-        'Informal group': regex_code + 'informal group',
-        'Phylum': regex_code + 'phylum',
-        'Subphylum': regex_code + 'subphylu',
-    }
-    # Searching only the first sentence of the lead
-    if re.search(match_lead_dict[possible_rank], lead_text.split('.')[0]):
-        return True
-
-    return False

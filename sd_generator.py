@@ -27,6 +27,16 @@ def shortdesc_generator(page, lead_text):
     rank_autobox, isextinct_autobox = info_from_autobox(wikipedia, text_compressed)
     all_ranks = [rank_category, rank_lead, rank_speciesbox, rank_taxobox, rank_autobox]
 
+    # Must be Variety or Subspecies if so noted in title
+    if 'var.' in title:
+        best_rank = 'Variety'
+        shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_singular)
+        return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
+    if 'subsp.' in title:
+        best_rank = 'Subspecies'
+        shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_singular)
+        return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
+
     # Get the most common rank from the list (excluding None)
     all_ranks_xnone = [x for x in all_ranks if x is not None]
     best_ranks = multimode(all_ranks_xnone)  # List of most common ranks (eg a list of 2 if there is a tie)
@@ -48,12 +58,13 @@ def shortdesc_generator(page, lead_text):
                 best_rank = 'Genus'
                 shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
                 return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
-
             if best_rank == 'Subspecies':  # Subspecies is unexpected if single-word title
                 return False, f'*** Unexpected rank "{best_rank}" for single-word title'
+            if best_rank == 'Variety':
+                return False, f'*** Unexpected rank "{best_rank}" for single-word title'
 
-        if not single_word_title:
-            if best_rank not in ('Species', 'Subspecies'):  # Genus or higher rank unexpected if multi-word title
+        if not single_word_title:  # Genus or higher rank unexpected if multi-word title
+            if best_rank not in ('Species', 'Subspecies', 'Variety'):
                 return False, f'*** Unexpected rank "{best_rank}" for multi-word title'
 
         shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)  # Best rank looks good
@@ -75,9 +86,12 @@ def shortdesc_generator(page, lead_text):
             shortdesc = 'Genus' + ' of ' + name_plural
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
-    # Prefer subspecies to species
+    # Prefer subspecies/variety to species
     if 'Subspecies' in diff_ranks and 'Species' in diff_ranks:
         shortdesc = 'Subspecies' + ' of ' + name_singular
+        return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
+    if 'Variety' in diff_ranks and 'Species' in diff_ranks:
+        shortdesc = 'Variety' + ' of ' + name_singular
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
     # Accept Species if a two-word title and at least one other possibility matches
