@@ -58,14 +58,14 @@ def shortdesc_generator(page, lead_text):
                 best_rank = 'Genus'
                 shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
                 return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
-            if best_rank == 'Subspecies':  # Subspecies is unexpected if single-word title
-                return False, f'*** Unexpected rank "{best_rank}" for single-word title'
-            if best_rank == 'Variety':
-                return False, f'*** Unexpected rank "{best_rank}" for single-word title'
+            if best_rank in ['Subspecies', 'Variety']:  # Subspecies/variety is unexpected if single-word title
+                shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_singular)
+                return False, '*** : ' + adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
         if not single_word_title:  # Genus or higher rank unexpected if multi-word title
             if best_rank not in ('Species', 'Subspecies', 'Variety'):
-                return False, f'*** Unexpected rank "{best_rank}" for multi-word title'
+                shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
+                return False, '*** : ' + adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
         shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)  # Best rank looks good
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
@@ -73,7 +73,7 @@ def shortdesc_generator(page, lead_text):
     # Return False if nothing at all works
     diff_ranks = list(set(all_ranks_xnone))
     if not diff_ranks:
-        return False, "*** Not a relevant article"
+        return False, "*** : NO MATCHING RANKS"
 
     # At this point we have several conflicting ranks for this page
 
@@ -114,6 +114,6 @@ def shortdesc_generator(page, lead_text):
 
     # Failed: return with some useful error text
     if rank_autobox is not None:
-        return False, f'*** Autotaxobox reports {rank_autobox}'
+        return False, f'*** :  AUTOTAXOBOX HAS {rank_autobox}'
 
-    return False, "*** Unmatched"
+    return False, "*** : CAN'T GET BEST RANK"
