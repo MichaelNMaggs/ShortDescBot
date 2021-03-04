@@ -4,7 +4,7 @@ from sd_functions import in_category
 
 # Add 'Extinct ...' to description unless that would make it too long
 def adjust_desc(page, lead_text, shortdesc, isextinct_autobox):
-    extinct_in_lead = ['is a fossil', 'is an extinct']
+    extinct_in_lead = ['is a fossil', 'is an extinct', 'was a species', 'was a genus', 'was a family', 'was a class']
     extinct_in_cat = ['fossil', 'prehistoric', 'extinctions']
 
     if len('Extinct ' + shortdesc) > 40:

@@ -4,7 +4,7 @@
 def is_monotypic_genus(text_compressed, lead_text):
     mono_list_page = ['[[category:monotypic']
     mono_list_lead = ['monotypic', 'monospecific', ' a single species', ' the single species',
-                      ' single-species', ' only one species', ' only the one species',
+                      ' single-species', ' only one species', ' only the one species', ' the only species',
                       ' its only species']
 
     for mono in mono_list_page:  # Parse entire page

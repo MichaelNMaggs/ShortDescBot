@@ -64,7 +64,7 @@ def check_page(page):
             if item.lower() in page.text.lower():
                 has_infobox = True
         if not has_infobox:
-            return False, 'Does not have infobox'
+            return False, 'Does not have an infobox'
         if sole_infobox:
             if count_infoboxes(page) > 1:
                 return False, 'Has multiple infoboxes'
