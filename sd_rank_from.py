@@ -102,11 +102,14 @@ def rank_from_lead(title_nobra, lead_txt, name_singular, verbose_stage):
             return rank
 
     # Must be Species if lead has eg "Abacetus alesi is a beetle ..."
-    regex_sp1 = f"{title_nobra}\s(is\sa|is\san|was\sa|was\san)\s{name_singular}"
-    if re.search(regex_sp1, lead_txt):
-        if verbose_stage:
-            print('regex_sp1 lead match on Species')
-        return 'Species'
+    try:
+        regex_sp1 = f'{title_nobra}\s(is\sa|is\san|was\sa|was\san)\s{name_singular}'
+        if re.search(regex_sp1, lead_txt):
+            if verbose_stage:
+                print('regex_sp1 lead match on Species')
+            return 'Species'
+    except re.error:  # Fails if title includes a question mark
+        pass
 
     # Most probably Species if lead has eg " ... is a beetle ..."
     regex_sp2 = f"(is\sa|is\san|was\sa|was\san)\s{name_singular}"

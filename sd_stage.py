@@ -37,23 +37,24 @@ def shortdesc_stage():
     # Main loop
     for page in pages:
         lead_text = get_lead(page)
+        title = clean_title(page.title())
 
         # If partial is True, skip over initial pages until we reach the startpoint
         if partial and not tripped:
-            at_startpoint = startpoint in page.title()
+            at_startpoint = startpoint in title
             tripped = at_startpoint
             if not at_startpoint:
                 continue
 
         if verbose_stage:
-            print('\nCHECKING PAGE  - ', page.title())
+            print('\nCHECKING PAGE  - ', title)
 
         # Do we want this page? Check against page definition
         result_page, skip_text = check_page(page)
 
         # Should we skip this page? (not recorded in the list of failures)
         if not result_page:
-            print(page.title() + ' - Skipped: ' + skip_text)
+            print(title + ' - Skipped: ' + skip_text)
             continue
 
         # OK, now process this page
@@ -61,11 +62,11 @@ def shortdesc_stage():
 
         # If we have not been able to extract a lead, write a new line to failure_str, for staging later
         if lead_text is None:
-            print(str(count_arts) + ': ' + page.title() + ' - FAILED: Could not extract lead')
+            print(str(count_arts) + ': ' + title + ' - FAILED: Could not extract lead')
             errortext = 'Could not extract lead'
             count_failure += 1
             failure_str += str(
-                count_failure) + '\t' + page.title() + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + '[None]' + '\n'
+                count_failure) + '\t' + title + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + '[None]' + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
@@ -76,10 +77,10 @@ def shortdesc_stage():
 
         # If the page fails, write a new line to failure_str, for staging later
         if not result_criteria:
-            print(str(count_arts) + ': ' + page.title() + ' - FAILED: ' + errortext)
+            print(str(count_arts) + ': ' + title + ' - FAILED: ' + errortext)
             count_failure += 1
             failure_str += str(
-                count_failure) + '\t' + page.title() + '\t' + errortext + '\t' + wikidata_sd + '\t' + lead_text + '\n'
+                count_failure) + '\t' + title + '\t' + errortext + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
@@ -88,10 +89,10 @@ def shortdesc_stage():
         result_gen, result_gen_txt = shortdesc_generator(page, lead_text)
         #  If no usable short description, treat as a page failure and write to failure_st
         if not result_gen:
-            print(str(count_arts) + ': ' + page.title() + ' - FAILED: ' + result_gen_txt)
+            print(str(count_arts) + ': ' + title + ' - FAILED: ' + result_gen_txt)
             count_failure += 1
             failure_str += str(
-                count_failure) + '\t' + page.title() + '\t' + result_gen_txt + '\t' + wikidata_sd + '\t' + lead_text \
+                count_failure) + '\t' + title + '\t' + result_gen_txt + '\t' + wikidata_sd + '\t' + lead_text \
                            + '\n'
             if stop_now(max_arts, count_arts):
                 break
@@ -100,22 +101,22 @@ def shortdesc_stage():
         # We have a good draft description!
         count_success += 1
         description = result_gen_txt
-        print(str(count_arts) + ': ' + page.title() + f' - STAGING NEW SD {count_success}: ' + description)
+        print(str(count_arts) + ': ' + title + f' - STAGING NEW SD {count_success}: ' + description)
 
         # Build up success_str string ready to save to local file
         success_str += str(
-            count_success) + '\t' + page.title() + '\t' + description + '\t' + wikidata_sd + '\t' + lead_text + '\n'
+            count_success) + '\t' + title + '\t' + description + '\t' + wikidata_sd + '\t' + lead_text + '\n'
         #  If needed, also build up success_examples_str string ready to write to userspace
         if write_wp_examples and count_success_examples <= max_examples:
             count_success_examples += 1
             success_examples_str += '|-\n'
-            success_examples_str += '| [[' + page.title() + ']] || ' + description + ' || ''' + wikidata_sd + ' || ' \
+            success_examples_str += '| [[' + title + ']] || ' + description + ' || ''' + wikidata_sd + ' || ' \
                                     + lead_text + '\n'
 
         if stop_now(max_arts, count_arts) or stop_now(max_stage, count_success):
             break
         if partial and tripped:  # If partial is True, stop when we reach the endpoint
-            at_endpoint = endpoint in page.title()
+            at_endpoint = endpoint in title
             if at_endpoint:
                 break
 

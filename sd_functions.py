@@ -142,6 +142,15 @@ def clean_text(textstr):
     return textstr
 
 
+# Fix spurious double-quote marks that appear in the (raw text) staged title when a word in the title has them
+def clean_title(title_str):
+    if '""' in title_str:
+        title_str = title_str.replace('""', '"')  # Double-quote marks within the title are duplicated
+        title_str = title_str[1:-1]  # and spurious double-quotes also appear at beginning and end
+
+    return title_str
+
+
 # Count the number of infoboxes
 def count_infoboxes(page):
     count = 0
