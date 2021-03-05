@@ -10,13 +10,13 @@ import pywikibot
 # 'stage': write to staging file (and optionally examples to userspace)
 # 'edit':  read from staging file and write live edits to namespace
 #  Note: When writing live edits, the SDs are taken from the staging file, and are not re-calculated anew
-mode_flag = 'edit'
+mode_flag = 'stage'
 
 #  STAGING CONFIGURATION
 
 # Base text for SDs
-name_singular = 'fish'
-name_plural = 'fishes'
+name_singular = 'marsupial'
+name_plural = 'marsupials'
 verbose_stage = False
 
 # Maximum number of articles to process, not including articles that are skipped
@@ -35,7 +35,6 @@ base_file = f'base_file {name_plural}.tsv'
 # (2) Or, read directly from a WP Category. Does this unless use_basefile = True
 targetcat = ''
 recurse_cats = True  # Be careful with this!
-
 
 # Define the pages that that we intend to stage. Others will be skipped without comment
 require_infobox = False
@@ -57,7 +56,6 @@ title_regex = re.compile(r'', re.IGNORECASE)
 stage_to_file = True  # Stage to file?
 max_stage = 0  # Set to 0 for no limit
 staging_file = f'staged {name_plural}.tsv'  # (date is added for staging_file output)
-staged_fail = f'staged_fail {name_plural}.tsv'
 write_wp_examples = False  # Write some examples to my wp userspace, for community review
 wp_examples_page = 'User:MichaelMaggs/ShortDesc'
 max_examples = 200

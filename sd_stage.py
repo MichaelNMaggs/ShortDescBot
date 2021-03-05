@@ -13,7 +13,7 @@ from sd_get_lead import get_lead
 # Calls check_page, check_criteria and shortdesc_generator
 def shortdesc_stage():
     count_arts = count_success = count_success_examples = count_failure = 0
-    success_str = success_examples_str = failure_str = ''
+    staging_str = success_examples_str = ''
     tripped = False
 
     # Set up pages as iterable, from cat or from Petscan file. Each item in pages must be created as a Pywikibot object
@@ -51,22 +51,20 @@ def shortdesc_stage():
 
         # Do we want this page? Check against page definition
         result_page, skip_text = check_page(page)
-
-        # Should we skip this page? (not recorded in the list of failures)
-        if not result_page:
+        if not result_page:   # Should we skip this page? (not recorded in the list of failures)
             print(title + ' - Skipped: ' + skip_text)
             continue
 
         # OK, now process this page
         count_arts += 1
 
-        # If we have not been able to extract a lead, write a new line to failure_str, for staging later
+        # If we have not been able to extract a lead, write failure line to staging_str
         if lead_text is None:
             print(str(count_arts) + ': ' + title + ' - FAILED: Could not extract lead')
             errortext = 'Could not extract lead'
             count_failure += 1
-            failure_str += str(
-                count_failure) + '\t' + title + ' | ' + errortext + ' | ' + wikidata_sd + ' | ' + '[None]' + '\n'
+            staging_str += str(
+                count_arts) + '\t' + title + '\t' + errortext + '\t' + wikidata_sd + '\t' + '[None]' + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
@@ -75,24 +73,23 @@ def shortdesc_stage():
         result_criteria, errortext = check_criteria(page, lead_text)
         wikidata_sd = get_wikidata_desc(page)
 
-        # If the page fails, write a new line to failure_str, for staging later
+        # If the page fails, write failure line to staging_str
         if not result_criteria:
             print(str(count_arts) + ': ' + title + ' - FAILED: ' + errortext)
             count_failure += 1
-            failure_str += str(
-                count_failure) + '\t' + title + '\t' + errortext + '\t' + wikidata_sd + '\t' + lead_text + '\n'
+            staging_str += str(
+                count_arts) + '\t' + title + '\t' + errortext + '\t' + wikidata_sd + '\t' + lead_text + '\n'
             if stop_now(max_arts, count_arts):
                 break
             continue
 
-        # The page matches, so we now need to get the new short description
-        result_gen, result_gen_txt = shortdesc_generator(page, lead_text)
-        #  If no usable short description, treat as a page failure and write to failure_st
-        if not result_gen:
-            print(str(count_arts) + ': ' + title + ' - FAILED: ' + result_gen_txt)
+        # The page matches - work out a new short description
+        result_gen, description = shortdesc_generator(page, lead_text)
+        if not result_gen:  #  If nothing usable, write failure line to staging_str
+            print(str(count_arts) + ': ' + title + ' - FAILED: ' + description)
             count_failure += 1
-            failure_str += str(
-                count_failure) + '\t' + title + '\t' + result_gen_txt + '\t' + wikidata_sd + '\t' + lead_text \
+            staging_str += str(
+                count_arts) + '\t' + title + '\t' + description + '\t' + wikidata_sd + '\t' + lead_text \
                            + '\n'
             if stop_now(max_arts, count_arts):
                 break
@@ -100,12 +97,11 @@ def shortdesc_stage():
 
         # We have a good draft description!
         count_success += 1
-        description = result_gen_txt
         print(str(count_arts) + ': ' + title + f' - STAGING NEW SD {count_success}: ' + description)
 
-        # Build up success_str string ready to save to local file
-        success_str += str(
-            count_success) + '\t' + title + '\t' + description + '\t' + wikidata_sd + '\t' + lead_text + '\n'
+        # Add to staging_str
+        staging_str += str(
+            count_arts) + '\t' + title + '\t' + description + '\t' + wikidata_sd + '\t' + lead_text + '\n'
         #  If needed, also build up success_examples_str string ready to write to userspace
         if write_wp_examples and count_success_examples <= max_examples:
             count_success_examples += 1
@@ -120,16 +116,16 @@ def shortdesc_stage():
             if at_endpoint:
                 break
 
-    # Finished creating the strings. Now stage the successes to staged_date
-    if success_str:
+    # Finished creating staging_str. Now stage to staged_output
+    if staging_str:
         try:
             now = datetime.datetime.now()
             dt_extension = f'{now:%Y-%m-%d (%H %M)}'
-            staged_date = staging_file.split('.')[0] + ' ' + dt_extension + '.tsv'
-            with open(staged_date, 'w') as f1:
-                f1.write(success_str)
+            staged_output = staging_file.split('.')[0] + f' ({count_success} of {count_arts}) ' + dt_extension + '.tsv'
+            with open(staged_output, 'w') as f1:
+                f1.write(staging_str)
         except:
-            print(f'\nSTOPPING: Unable to open {staged_date}')
+            print(f'\nSTOPPING: Unable to open {staged_output}')
             return
 
     # Write examples to my userspace, if requested
@@ -144,23 +140,11 @@ def shortdesc_stage():
         except:
             print(f'\nWARNING: Unable to write examples to {wp_examples_page}')
 
-    #  Write the failures to staged_fail_date
-    if failure_str:
-        now = datetime.datetime.now()
-        dt_extension = f'{now:%Y-%m-%d (%H %M)}'
-        staged_fail__date = staged_fail.split('.')[0] + ' ' + dt_extension + '.tsv'
-        try:
-            with open(staged_fail__date, 'w') as f2:
-                f2.write(failure_str)
-        except:
-            print(f'\nSTOPPING: Unable to open {staged_fail__date}')
-            return
-
     try:
         targets = count_failure + count_success
         succ_pc = round(100 * count_success / targets, 2)
         fail_pc = round(100 * count_failure / targets, 2)
-        print(f'\nDrafts are staged in {staging_file}, with failures in {staged_fail}')
+        print(f'\nDrafts are staged in {staged_output}')
         if write_wp_examples:
             print('Examples are at https://en.wikipedia.org/wiki/' + wp_examples_page.replace(' ', '_'))
         print(f'\nTARGETS: {targets}  SUCCESS: {count_success} ({succ_pc}%)  FAILURE: {count_failure} ({fail_pc}%)')

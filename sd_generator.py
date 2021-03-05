@@ -73,7 +73,7 @@ def shortdesc_generator(page, lead_text):
     # Return False if nothing at all works
     diff_ranks = list(set(all_ranks_xnone))
     if not diff_ranks:
-        return False, "*** : NO MATCHING RANKS"
+        return False, "***** : NO MATCHING RANKS"
 
     # At this point we have several conflicting ranks for this page
 
@@ -114,6 +114,6 @@ def shortdesc_generator(page, lead_text):
 
     # Failed: return with some useful error text
     if rank_autobox is not None:
-        return False, f'*** :  AUTOTAXOBOX HAS {rank_autobox}'
+        return False, f'***** :  AUTOTAXOBOX HAS {rank_autobox}'
 
-    return False, "*** : CAN'T GET BEST RANK"
+    return False, "***** : CAN'T GET BEST RANK"
