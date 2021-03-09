@@ -15,8 +15,8 @@ mode_flag = 'stage'
 #  STAGING CONFIGURATION
 
 # Base text for SDs
-name_singular = 'marsupial'
-name_plural = 'marsupials'
+name_singular = 'crustacean'
+name_plural = 'crustaceans'
 verbose_stage = False
 
 # Maximum number of articles to process, not including articles that are skipped
@@ -60,17 +60,21 @@ write_wp_examples = False  # Write some examples to my wp userspace, for communi
 wp_examples_page = 'User:MichaelMaggs/ShortDesc'
 max_examples = 200
 
+# SETTINGS FOR BOTH STAGING AND EDITING
+
+# Is the bot allowed to change existing existing manual/embedded descriptions?
+override_manual = False  # Existing description with the {{Short description}} template
+override_embedded = False  # Existing description embedded within eg an infobox
+
 #  EDIT CONFIGURATION
 
 # assisted_mode: set to True to step though and confirm every live edit in advance
 # If before BAG approval, must run from normal user account, not the bot account,
 assisted_mode = False
-# Is the bot allowed to change existing existing manual/embedded descriptions?
-override_manual = False  # Existing description with the {{Short description}} template
-override_embedded = False  # Existing description embedded within eg an infobox
 # Set a longer than usual wait time between live wp edits. Normally controlled by put_throttle in user-config.py
 wait_time = 0
 
-# Initialise the site
+# INITIALISE
+
 wikipedia = pywikibot.Site('en', 'wikipedia')
 username = pywikibot.config.usernames['wikipedia']['en']

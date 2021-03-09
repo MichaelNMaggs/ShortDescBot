@@ -99,7 +99,7 @@ def get_wikidata_desc(page):
         item_dict = wd_item.get()
         qid = wd_item.title()
     except:
-        print('WIKIDATA ERROR: No QID recovered')
+        #print('WIKIDATA ERROR: No QID recovered')
         return ''
     try:
         return item_dict['descriptions']['en']
