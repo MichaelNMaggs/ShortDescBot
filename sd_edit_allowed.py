@@ -23,7 +23,7 @@ def ok_to_edit(page, title, description, username, existing_desc, existing_type,
     if description == existing_desc:
         print(title + f' - NO EDIT MADE: No change to "{description}"')
         return False
-    if description == 'Not a relevant article':
+    if '*' in description:
         print(title + ' - NO EDIT MADE: Description starts with "*"')  # Indicates a page that previously failed staging
         return False
     if '#REDIRECT' in page.text.upper():
