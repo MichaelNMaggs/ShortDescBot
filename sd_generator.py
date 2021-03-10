@@ -44,6 +44,10 @@ def shortdesc_generator(page, lead_text):
         best_rank = 'Subgenus'
         shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
+    if ' sp.' in title:
+        best_rank = 'Species'
+        shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_singular)
+        return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
     # Get the most common rank from the list (excluding None)
     all_ranks_xnone = [x for x in all_ranks if x is not None]
