@@ -41,7 +41,7 @@ def shortdesc_generator(page, lead_text):
         shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
     if 'subg.' in title:
-        best_rank = 'Subgroup'
+        best_rank = 'Subgenus'
         shortdesc = best_rank + ' of ' + shortdesc_end(best_rank, name_singular, name_plural)
         return True, adjust_desc(page, lead_text, shortdesc, isextinct_autobox)
 
