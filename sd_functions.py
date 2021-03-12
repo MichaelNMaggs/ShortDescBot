@@ -14,15 +14,15 @@ def check_criteria(page, lead_text):
     # Returns (True, '') or (False, reason)
 
     if not lead_text:
-        return False, 'Could not create lead (unpaired delimiters)'
+        return False, '**** Could not create lead (unpaired delimiters)'
     if required_words:  # Skip if required_words == []
         for required in required_words:
             if required not in lead_text:
-                return False, 'Required word missing - ' + required
+                return False, '**** Required word missing - ' + required
     if excluded_words:
         for excluded in excluded_words:
             if excluded in lead_text:
-                return False, 'Excluded word present - ' + excluded
+                return False, '**** Excluded word present - ' + excluded
     none_found = True
     if some_words:
         for some_word in some_words:
@@ -30,15 +30,15 @@ def check_criteria(page, lead_text):
                 none_found = False
                 break
         if none_found:
-            return False, 'None of the some_words are present'
+            return False, '**** None of the some_words are present'
     if text_regex_tf:
         result = text_regex.match(lead_text)  # Returns object if a match, or None
         if result is None:
-            return False, 'Lead does not match regex'
+            return False, '**** Lead does not match regex'
     if title_regex_tf:
         result = title_regex.match(page.title())  # Returns object if a match, or None
         if result is None:
-            return False, 'Title does not match regex'
+            return False, '**** Title does not match regex'
 
     return True, ''
 

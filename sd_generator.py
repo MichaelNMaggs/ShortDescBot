@@ -4,9 +4,9 @@ from statistics import multimode
 
 from sd_adjust_desc import adjust_desc
 from sd_functions import *
+from sd_is_monotypic_genus import is_monotypic_genus
 from sd_rank_from import rank_from_category, rank_from_lead, rank_from_speciesbox, \
     rank_from_taxobox, info_from_autobox
-from sd_is_monotypic_genus import is_monotypic_genus
 
 
 # Generate the draft SD. Called by shortdesc_stage. Returns (True, description) for good result, or (False, errortext)
