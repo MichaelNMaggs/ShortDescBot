@@ -49,7 +49,7 @@ def shortdesc_add():
         # Check for various things before allowing a page edit
         try:
             if not ok_to_edit(page, title, description, username, existing_desc, existing_type, override_manual,
-                              override_embedded):
+                              override_embedded, existing_desc_regex):
                 skip_count += 1
                 continue   # Go on to next line, ie page to edit
         except AssertionError:

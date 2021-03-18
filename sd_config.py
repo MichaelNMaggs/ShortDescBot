@@ -12,11 +12,13 @@ import pywikibot
 #  Note: When writing live edits, the SDs are taken from the staging file, and are not re-calculated anew
 mode_flag = 'stage'
 
-#  STAGING CONFIGURATION
+#  STAGING CONFIGURATION – none of this affects editing
+
 
 # Base text for SDs
-name_singular = 'crustacean'
-name_plural = 'crustaceans'
+name_singular = 'dinosaur'
+name_plural = 'dinosaurs'
+
 verbose_stage = False
 
 # Maximum number of articles to process, not including articles that are skipped
@@ -42,9 +44,9 @@ infobox_strings = ['Speciesbox', 'Taxobox']  # Covers Automatic Taxobox and Subs
 sole_infobox = False  # Skip pages that have more than one infobox (applies only if require_infobox = True)
 
 # Special staging criteria. Can usually skip this. Pages that fail any of these will be recorded
-# These restrict the pages from the Cat/base_file input that are considered as targets, not how they will be processed
-# For how the targets are to be processed, need to hand-craft the code in shortdesc_generator
-required_words = []  # Must have all of these
+# These restrict the pages from the base_file or category input that are considered as targets,
+# not how they will be processed
+required_words = ['dinosaur']  # Must have all of these
 some_words = []  # Must have at least one of these
 excluded_words = []  # Must not have any of these
 text_regex_tf = False  # Check for this regex in the text
@@ -60,13 +62,15 @@ write_wp_examples = False  # Write some examples to my wp userspace, for communi
 wp_examples_page = 'User:MichaelMaggs/ShortDesc'
 max_examples = 200
 
-# SETTINGS FOR BOTH STAGING AND EDITING
+# SETTINGS FOR BOTH STAGING AND EDITING  – these tests are carried out both when staging and when editing
 
-# Is the bot allowed to change existing existing manual/embedded descriptions?
-override_manual = False  # Existing description with the {{Short description}} template
+# Will the bot be changing existing short descriptions?
+override_manual = True  # Existing description with the {{Short description}} template
 override_embedded = False  # Existing description embedded within eg an infobox
+# Allow change to existing description only when matched
+existing_desc_regex = re.compile('(Extinct\s|)(genus|species|family|clade|order)\sof\sreptile', re.IGNORECASE)
 
-#  EDIT CONFIGURATION
+#  EDIT CONFIGURATION – none of this affects staging
 
 # assisted_mode: set to True to step though and confirm every live edit in advance
 # If before BAG approval, must run from normal user account, not the bot account,

@@ -85,7 +85,7 @@ def shortdesc_stage():
 
         # The page matches - work out a new short description
         result_gen, description = shortdesc_generator(page, lead_text)
-        if not result_gen:  #  If nothing usable, write failure line to staging_str
+        if not result_gen:  # If nothing usable, write failure line to staging_str
             print(str(count_arts) + ': ' + title + ' - FAILED: ' + description)
             count_failure += 1
             staging_str += str(

@@ -39,7 +39,14 @@ def check_criteria(page, lead_text):
         result = title_regex.match(page.title())  # Returns object if a match, or None
         if result is None:
             return False, '**** Title does not match regex'
-
+    # If we intend to override existing descriptions, check whether the regex matches
+    existing_desc, existing_type = existing_shortdesc(page)
+    override = (override_manual and existing_type == 'manual') or (override_embedded and existing_type == 'embedded')
+    if override:
+        result = existing_desc_regex.match(existing_desc)  # Returns object if a match, or None
+        # print('EXISTING SD and RESULT: ', existing_desc, existing_type, result)
+        if result is None:
+            return False, '**** Existing description does not match regex'
     return True, ''
 
 
@@ -99,7 +106,7 @@ def get_wikidata_desc(page):
         item_dict = wd_item.get()
         qid = wd_item.title()
     except:
-        #print('WIKIDATA ERROR: No QID recovered')
+        # print('WIKIDATA ERROR: No QID recovered')
         return ''
     try:
         return item_dict['descriptions']['en']
@@ -242,7 +249,7 @@ def find_between(s, start, end):
 
 
 def shortdesc_end(best_rank, name_singular, name_plural):
-    if best_rank in ['Species', 'Subspecies']:
+    if best_rank in ['Species', 'Subspecies', 'Variety']:
         return name_singular
     else:
         return name_plural

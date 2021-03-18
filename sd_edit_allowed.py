@@ -4,13 +4,20 @@ from sd_functions import allow_bots
 
 
 # Check for various things before allowing a page edit
-def ok_to_edit(page, title, description, username, existing_desc, existing_type, override_manual, override_embedded):
+def ok_to_edit(page, title, description, username, existing_desc, existing_type, override_manual, override_embedded,
+               existing_desc_regex):
     if not override_manual and existing_type == 'manual':  # Don't edit if not allowed to change an existing desc
         print(title + ' - NO EDIT MADE: Page now has a manual description')
         return False
     if not override_embedded and existing_type == 'embedded':
         print(title + ' - NO EDIT MADE: Page now has an embedded description')
         return False
+    override = (override_manual and existing_type == 'manual') or (override_embedded and existing_type == 'embedded')
+    if override:
+        result = existing_desc_regex.match(existing_desc)  # Returns object if a match, or None
+        if result is None:
+            print(title + ' - NO EDIT MADE: Existing description does not match regex')
+            return False
     if '#REDIRECT' in page.text.upper():
         print(title + ' - NO EDIT MADE: Page has been converted to a redirect')
         return False
