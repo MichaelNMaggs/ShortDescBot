@@ -242,7 +242,7 @@ def find_between(s, start, end):
 
 
 def shortdesc_end(best_rank, name_singular, name_plural):
-    if best_rank in ['Species', 'Subspecies']:
+    if best_rank in ['Species', 'Subspecies', 'Variety']:
         return name_singular
     else:
         return name_plural
