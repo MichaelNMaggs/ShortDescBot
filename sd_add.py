@@ -49,7 +49,8 @@ def shortdesc_add():
         # Check for various things before allowing a page edit
         try:
             if not ok_to_edit(page, title, description, username, existing_desc, existing_type, override_manual,
-                              override_embedded, existing_desc_regex):
+                              override_embedded, existing_desc_regex, existing_desc_required_words,
+                              existing_desc_excluded_words):
                 skip_count += 1
                 continue   # Go on to next line, ie page to edit
         except AssertionError:
@@ -99,10 +100,10 @@ def shortdesc_add():
 
         # Override an existing embedded description
         if existing_type == 'embedded':
-            edit_text = 'Overriding [[Wikipedia:Short description|short description]] from infobox'
+            edit_text = 'Overriding [[Wikipedia:Short description|short description]] from infobox with'
             if username == 'ShortDescBot':
                 edit_text = '[[User:ShortDescBot|ShortDescBot]] overriding [[Wikipedia:Short description|short ' \
-                            'description]] from infobox'
+                            'description]] from infobox with'
             page.text = '{{Short description|' + description + '}}\n' + page.text
             print(str(ecount + 1) + ': ' + title + f' - OVERRIDING EMBEDDED SD: ' + description)
 

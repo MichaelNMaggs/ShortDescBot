@@ -13,6 +13,22 @@ def check_criteria(page, lead_text):
     # We need to match on *everything* specified in the criteria
     # Returns (True, '') or (False, reason)
 
+    existing_desc, existing_type = existing_shortdesc(page)
+    override = (override_manual and existing_type == 'manual') or (override_embedded and existing_type == 'embedded')
+    if override:    # If we intend to override existing descriptions
+        result = existing_desc_regex.match(existing_desc)  # Returns object if a match, or None
+        # print('EXISTING SD and RESULT: ', existing_desc, existing_type, result)
+        if result is None:
+            return False, '**** Existing description does not match regex'
+        if existing_desc_required_words:  # Skip if existing_desc_required_words == []
+            for required in existing_desc_required_words:
+                if required not in existing_desc:
+                    return False, '**** Required word missing from existing SD - ' + required
+        if existing_desc_excluded_words:
+            for excluded in existing_desc_excluded_words:
+                if excluded in existing_desc:
+                    return False, '**** Excluded word present in existing SD - ' + excluded
+
     if not lead_text:
         return False, '**** Could not create lead (unpaired delimiters)'
     if required_words:  # Skip if required_words == []
@@ -23,14 +39,6 @@ def check_criteria(page, lead_text):
         for excluded in excluded_words:
             if excluded in lead_text:
                 return False, '**** Excluded word present - ' + excluded
-    none_found = True
-    if some_words:
-        for some_word in some_words:
-            if some_word in lead_text:
-                none_found = False
-                break
-        if none_found:
-            return False, '**** None of the some_words are present'
     if text_regex_tf:
         result = text_regex.match(lead_text)  # Returns object if a match, or None
         if result is None:
@@ -39,14 +47,8 @@ def check_criteria(page, lead_text):
         result = title_regex.match(page.title())  # Returns object if a match, or None
         if result is None:
             return False, '**** Title does not match regex'
-    # If we intend to override existing descriptions, check whether the regex matches
-    existing_desc, existing_type = existing_shortdesc(page)
-    override = (override_manual and existing_type == 'manual') or (override_embedded and existing_type == 'embedded')
-    if override:
-        result = existing_desc_regex.match(existing_desc)  # Returns object if a match, or None
-        # print('EXISTING SD and RESULT: ', existing_desc, existing_type, result)
-        if result is None:
-            return False, '**** Existing description does not match regex'
+
+
     return True, ''
 
 

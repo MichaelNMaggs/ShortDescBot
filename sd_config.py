@@ -10,14 +10,13 @@ import pywikibot
 # 'stage': write to staging file (and optionally examples to userspace)
 # 'edit':  read from staging file and write live edits to namespace
 #  Note: When writing live edits, the SDs are taken from the staging file, and are not re-calculated anew
-mode_flag = 'stage'
+mode_flag = 'edit'
 
 #  STAGING CONFIGURATION – none of this affects editing
 
-
 # Base text for SDs
-name_singular = 'dinosaur'
-name_plural = 'dinosaurs'
+name_singular = 'alga'
+name_plural = 'algae'
 
 verbose_stage = False
 
@@ -46,9 +45,9 @@ sole_infobox = False  # Skip pages that have more than one infobox (applies only
 # Special staging criteria. Can usually skip this. Pages that fail any of these will be recorded
 # These restrict the pages from the base_file or category input that are considered as targets,
 # not how they will be processed
-required_words = ['dinosaur']  # Must have all of these
-some_words = []  # Must have at least one of these
-excluded_words = []  # Must not have any of these
+required_words = ['']  # Must have all of these in the lead
+some_words = []  # Must have at least one of these in the lead
+excluded_words = []  # Must not have any of these in the lead
 text_regex_tf = False  # Check for this regex in the text
 text_regex = re.compile(r'', re.IGNORECASE)
 title_regex_tf = False  # Check for this regex in the page title
@@ -64,11 +63,15 @@ max_examples = 200
 
 # SETTINGS FOR BOTH STAGING AND EDITING  – these tests are carried out both when staging and when editing
 
-# Will the bot be changing existing short descriptions?
-override_manual = True  # Existing description with the {{Short description}} template
+# Control overriding of existing descriptions
+override_manual = False  # Existing description with the {{Short description}} template
 override_embedded = False  # Existing description embedded within eg an infobox
 # Allow change to existing description only when matched
-existing_desc_regex = re.compile('(Extinct\s|)(genus|species|family|clade|order)\sof\sreptile', re.IGNORECASE)
+existing_desc_required_words = ['']
+existing_desc_excluded_words = []
+
+# existing_desc_regex = re.compile('(Extinct\s|)(genus|species|family|clade|order)\sof\sreptile', re.IGNORECASE)
+existing_desc_regex = re.compile('', re.IGNORECASE)  # If null is wanted, remember to include that
 
 #  EDIT CONFIGURATION – none of this affects staging
 
